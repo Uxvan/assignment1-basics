@@ -2,10 +2,12 @@ import regex as re
 
 def merge(pair,ID,byte_data):
     for piece in byte_data:
-        for i in range(len(piece)-1):
+       i=0
+       while i<len(piece)-1:
             if (piece[i],piece[i+1])==pair:
                 piece[i]=ID
                 del piece[i+1]
+            i+=1
             
 
 def train_bpe(input_path,vocab_size,special_tokens):
@@ -27,7 +29,6 @@ def train_bpe(input_path,vocab_size,special_tokens):
         start_ID+=1
 
     while len(vocab)<vocab_size:
-
         for piece in byte_data:
             for i in range(len(piece)-1):
                 pair=(piece[i],piece[i+1])
@@ -37,7 +38,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
         max_pairs=[k for k,v in pair_count.items() if v==max_count] #一列有最大出现频率的pairs
         merge_pair=max(max_pairs) #选择最大字节序
 
-        vocab[start_ID]=merge_pair[0]+merge_pair[1] #eg.['h','i'] -> ['hi']
+        vocab[start_ID]=vocab[merge_pair[0]]+vocab[merge_pair[1]] #eg.['h','i'] -> ['hi']
         merges.append(merge_pair)
 
         merge(merge_pair,start_ID,byte_data) #更新byte_data，一对转化为一个
@@ -46,3 +47,6 @@ def train_bpe(input_path,vocab_size,special_tokens):
         pair_count={}
     
     return vocab,merges
+
+
+    
