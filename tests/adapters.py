@@ -591,7 +591,7 @@ def run_train_bpe(
     """
     #raise NotImplementedError
     from cs336_basics.bpe_train import bpe_train
-    return train_bpe(
+    return bpe_train(
         input_path=input_path,
         vocab_size=vocab_size,
         special_tokens=special_tokens,
