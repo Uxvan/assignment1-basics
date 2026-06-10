@@ -8,7 +8,7 @@ def merge(pair,ID,byte_data):
                 del piece[i+1]
             
 
-def bpe_train(input_path,vocab_size,special_tokens):
+def train_bpe(input_path,vocab_size,special_tokens):
 
     vocab = {i: bytes([i]) for i in range(256)}
     merges=[]
