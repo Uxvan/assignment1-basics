@@ -1,3 +1,4 @@
+'''
 import regex as re
 import re as builtin_re
 
@@ -97,7 +98,7 @@ def train_bpe(input_path, vocab_size, special_tokens):
         start_ID += 1
     
     return vocab, merges
-'''
+
 import regex as re
 import re as builtin_re
 
@@ -163,7 +164,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
         start_ID+=1
     
     return vocab,merges
-
+'''
 
     
 
@@ -322,12 +323,4 @@ def run_train_bpe(
 
     return vocab, merges # 返回最终的词汇表和合并记录
 
-if __name__ == "__main__":
-    special_tokens = ["<|endoftext|>"]
-    vocab, merges = run_train_bpe("../data/owt_train.txt", 20000, [""])
-
-# vocab, merges = run_train_bpe(data_path, vocab_size, special_tokens)
-    print(vocab)
-    print(merges)
-'''
     
