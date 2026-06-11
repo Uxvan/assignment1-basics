@@ -63,14 +63,14 @@ def train_bpe(input_path,vocab_size,special_tokens):
         for tok,freq in token_freq.items():
             i=0
             new_tok=[]
-            while i<len(tok)-1:
-                if (tok[i],tok[i+1])==merge_pair:
+            while i<len(tok):
+                if (tok[i],tok[i+1])==merge_pair and i<len(tok)-1 :
                     if i+2<len(tok):#减去右邻pair,加上新右邻
                         pair_count[(tok[i+1],tok[i+2])]-=freq #以merge_pair=ab为例，减去[d,a,b,c]中的pair(b,c)个数
                         pair_count[(vocab[next_ID],tok[i+2])]+=freq #添加(ab,c)
                     if  i>0:#减去旧左邻,加上新左邻
                         pair_count[(tok[i-1],tok[i])]-=freq
-                        pair_count[(tok[i-1],vocab[next_ID])]=freq
+                        pair_count[(tok[i-1],vocab[next_ID])]+=freq
 
                     new_tok.append(vocab[next_ID])
                     i+=2
