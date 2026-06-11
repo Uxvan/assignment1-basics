@@ -61,7 +61,9 @@ def train_bpe(input_path,vocab_size,special_tokens):
                         pair_count[(start_ID,piece[i+1])]=pair_count.get((start_ID,piece[i+1]),0)+1 #添加(ab,c)
                     if i>0:#加上新左邻
                         pair_count[(piece[i-1],start_ID)]=pair_count.get((piece[i-1],start_ID),0)+1
-                i+=1
+                else:
+                    i+=1
+                    
         start_ID+=1
     
     return vocab,merges
