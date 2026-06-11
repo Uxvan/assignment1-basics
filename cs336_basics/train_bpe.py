@@ -11,7 +11,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
     for tok in special_tokens:
         tok_bytes=tok.encode("utf-8")
         if tok_bytes not in set(vocab.values()):
-            vocab[next_ID]=i.encode('utf-8')
+            vocab[next_ID]=tok_bytes
             next_ID+=1
 
     #一、分割文本，每个word，标点等转为bytes，并统计频率
