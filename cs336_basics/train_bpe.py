@@ -190,7 +190,7 @@ def merge_token_sequence(token_seq: Tuple, best_pair: Tuple, new_token: bytes) -
             i += 1
     return tuple(new_seq)
 
-def run_train_bpe(
+def train_bpe(
     input_path: str | os.PathLike,
     vocab_size: int,
     special_tokens: list[str],
