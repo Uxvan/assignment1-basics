@@ -60,7 +60,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
         #更新pair_count
         new_token_freq=defaultdict(int)
         pair_count.pop(merge_pair)
-        for tok,freq in token_freq.values():
+        for tok,freq in token_freq.items():
             i=0
             new_tok=[]
             while i<len(piece)-1:
