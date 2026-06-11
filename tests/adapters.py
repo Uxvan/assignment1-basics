@@ -590,8 +590,8 @@ def run_train_bpe(
                 Merges are ordered by order of creation.
     """
     #raise NotImplementedError
-    from cs336_basics.train_bpe import train_bpe
-    return train_bpe(
+    from cs336_basics.train_bpe import run_train_bpe
+    return run_train_bpe(
         input_path=input_path,
         vocab_size=vocab_size,
         special_tokens=special_tokens
