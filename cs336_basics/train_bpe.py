@@ -1,4 +1,4 @@
-'''
+
 import regex as re
 import re as builtin_re
 
@@ -49,25 +49,24 @@ def train_bpe(input_path,vocab_size,special_tokens):
             i=0
             while i<len(piece)-1:
                 if (piece[i],piece[i+1])==merge_pair:
-                    if i+2<len(piece):#减去右邻pair
+                    if i+2<len(piece):#减去右邻pair,加上新右邻
                         pair_count[(piece[i+1],piece[i+2])]-=1 #以merge_pair=ab为例，减去[d,a,b,c]中的pair(b,c)个数
-                    if  i>0:#减去旧左邻
+                        pair_count[(start_ID,piece[i+2])]=pair_count.get((start_ID,piece[i+2]),0)+1 #添加(ab,c)
+                    if  i>0:#减去旧左邻,加上新左邻
                         pair_count[(piece[i-1],piece[i])]-=1
+                        pair_count[(piece[i-1],start_ID)]=pair_count.get((piece[i-1],start_ID),0)+1
                         
                     #更新byte_data
                     piece[i]=start_ID
                     del piece[i+1]
-
-                    if i+2<len(piece):#加上新右邻
-                        pair_count[(start_ID,piece[i+1])]=pair_count.get((start_ID,piece[i+1]),0)+1 #添加(ab,c)
-                    if i>0:#加上新左邻
-                        pair_count[(piece[i-1],start_ID)]=pair_count.get((piece[i-1],start_ID),0)+1
-                else:
-                    i+=1
-                    
+                        
+                i+=1
         start_ID+=1
     
     return vocab,merges
+
+
+    
 '''
 import os
 import collections
@@ -223,7 +222,7 @@ def run_train_bpe(
         pickle.dump(merges, f)
 
     return vocab, merges # 返回最终的词汇表和合并记录
-'''
+
 if __name__ == "__main__":
     special_tokens = ["<|endoftext|>"]
     vocab, merges = run_train_bpe("../data/owt_train.txt", 20000, [""])
@@ -231,5 +230,5 @@ if __name__ == "__main__":
 # vocab, merges = run_train_bpe(data_path, vocab_size, special_tokens)
     print(vocab)
     print(merges)
-
+'''
     
