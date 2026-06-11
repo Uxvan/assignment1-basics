@@ -1,4 +1,103 @@
+import regex as re
+import re as builtin_re
 
+def train_bpe(input_path, vocab_size, special_tokens):
+    # 1. 初始化基础词表 (0-255 字节)
+    vocab = {i: bytes([i]) for i in range(256)}
+    merges = []
+    
+    # 2. 分配特殊 Token 的 ID (紧跟在 255 后面)
+    start_ID = 256
+    for tok in special_tokens:
+        vocab[start_ID] = tok.encode('utf-8')
+        start_ID += 1
+
+    # GPT-2/GPT-4 核心正则表达式
+    PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+    
+    with open(input_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # 正确处理特殊标记：如果存在特殊标记，用正则安全切分
+    if special_tokens:
+        special_pattern = '|'.join(builtin_re.escape(tok) for tok in special_tokens)
+        # 用捕获括号 () 确保 split 结果保留特殊标记
+        parts = builtin_re.split(f'({special_pattern})', content)
+    else:
+        parts = [content]
+
+    # 构建基础序列数据
+    byte_data = []
+    for p in parts:
+        if not p:
+            continue
+        if p in special_tokens:
+            # 特殊 Token 作为独立的一个整体，不参与文本切分与内部合并
+            # 这里我们在训练语料中可以不处理它，或者把它当作一个整体的原子ID（这里不放入byte_data参与BPE合并）
+            continue
+        
+        # 正常文本切分
+        pieces = re.findall(PAT, p)
+        for piece in pieces:
+            byte_data.append(list(piece.encode('utf-8')))
+
+    # 3. 初次统计全局的字节对频次
+    pair_count = {}
+    for piece in byte_data:
+        for i in range(len(piece) - 1):
+            pair = (piece[i], piece[i + 1])
+            pair_count[pair] = pair_count.get(pair, 0) + 1
+
+    # 4. 核心 BPE 循环
+    while len(vocab) < vocab_size:
+        if not pair_count:
+            break
+            
+        # 寻找最高频的字节对
+        max_count = max(pair_count.values())
+        max_pairs = [k for k, v in pair_count.items() if v == max_count]
+        
+        # 如果有同频的，选择字节序最大的（按你的原逻辑）
+        merge_pair = max(max_pairs) 
+
+        # 写入词表
+        vocab[start_ID] = vocab[merge_pair[0]] + vocab[merge_pair[1]]
+        merges.append((vocab[merge_pair[0]], vocab[merge_pair[1]]))
+
+        # 动态更新数据和频次（采用重构重建法，避免指针移位 Bug）
+        new_pair_count = {}
+        new_byte_data = []
+        
+        for piece in byte_data:
+            if len(piece) < 2:
+                new_byte_data.append(piece)
+                continue
+                
+            new_piece = []
+            i = 0
+            while i < len(piece):
+                # 如果匹配到要合并的对
+                if i < len(piece) - 1 and (piece[i], piece[i+1]) == merge_pair:
+                    new_piece.append(start_ID)
+                    i += 2 # 跳过被合并的右元素
+                else:
+                    new_piece.append(piece[i])
+                    i += 1
+            
+            new_byte_data.append(new_piece)
+            
+            # 重新统计这个 piece 产生的新 pair
+            for j in range(len(new_piece) - 1):
+                p = (new_piece[j], new_piece[j+1])
+                new_pair_count[p] = new_pair_count.get(p, 0) + 1
+                
+        byte_data = new_byte_data
+        pair_count = new_pair_count
+        
+        start_ID += 1
+    
+    return vocab, merges
+'''
 import regex as re
 import re as builtin_re
 
@@ -67,7 +166,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
 
 
     
-'''
+
 import os
 import collections
 from typing import List, Tuple, Dict, Set
