@@ -2,6 +2,14 @@ import regex as re
 import re as builtin_re
 from collections import defaultdict
 
+def PairCount(token_freq):
+    pair_count=defaultdict(int)
+    for piece in token_freq.keys():
+        for i in range(len(piece)-1):
+            pair=(piece[i],piece[i+1])
+            pair_count[pair]+=token_freq[piece] # {(pair_bytes):count,...}
+    return pair_count
+    
 def train_bpe(input_path,vocab_size,special_tokens):
 
     vocab = {i: bytes([i]) for i in range(256)}
@@ -36,7 +44,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
         bytes_list=[bytes([x]) for x in word_bytes]#[b'h',b'e',b'l',b'l',b'o']
         token_freq[tuple(bytes_list)]+=1
         
-    
+    '''
     #二、初始化字节对
     pair_count=defaultdict(int)
     for piece in token_freq.keys():
@@ -81,7 +89,38 @@ def train_bpe(input_path,vocab_size,special_tokens):
             new_token_freq[tuple(new_tok)]+=freq
         token_freq=new_token_freq
         next_ID+=1
+    '''
+    pair_count=PairCount(token_freq) #初始化字节对
+    while len(vocab)<vocab_size:
+        if not pair_count:
+            break
+
+        max_count=max(pair_count.values()) #最大频率
+        max_pairs=[k for k,v in pair_count.items() if v==max_count] #一列有最大出现频率的pairs
+        merge_pair=max(max_pairs) #选择最大字节序
+
+        vocab[next_ID]=merge_pair[0]+merge_pair[1] #eg.['h','i'] -> ['hi'],注意要先把token转换为字符
+        merges.append(merge_pair)
+
+        #更新oken_freq
+        new_token_freq=defaultdict(int)
+        for tok,freq in token_freq.items():
+            i=0
+            new_tok=[]
+            while i<len(tok):
+                if i<len(tok)-1 and (tok[i],tok[i+1])==merge_pair :
+                    new_tok.append(vocab[next_ID])
+                    i+=2
+                else:
+                    new_tok.append(tok[i])
+                    i+=1
+            new_token_freq[tuple(new_tok)]+=freq
+        token_freq=new_token_freq
     
+        #更新pair_count
+        pair_count=PairCount(token_freq)
+
+        next_ID+=1
     return vocab,merges
 
 
