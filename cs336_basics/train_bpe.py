@@ -175,7 +175,8 @@ def train_bpe(input_path,vocab_size,special_tokens):
                     new_tok.append(tok[i])
                     i+=1
             new_tok=tuple(new_tok)
-            token_freq[new_tok]=token_freq.pop(tok)
+            f=token_freq.pop(tok)
+            token_freq[new_tok]=f
         
             #更新pair_token
             pair_token.pop(merge_pair)
