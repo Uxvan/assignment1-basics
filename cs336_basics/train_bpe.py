@@ -1,14 +1,7 @@
+'''
 import regex as re
 import re as builtin_re
 from collections import defaultdict
-
-def PairCount(token_freq):
-    pair_count=defaultdict(int)
-    for piece in token_freq.keys():
-        for i in range(len(piece)-1):
-            pair=(piece[i],piece[i+1])
-            pair_count[pair]+=token_freq[piece] # {(pair_bytes):count,...}
-    return pair_count
     
 def train_bpe(input_path,vocab_size,special_tokens):
 
@@ -43,8 +36,8 @@ def train_bpe(input_path,vocab_size,special_tokens):
         word_bytes=word.encode('utf-8')
         bytes_list=[bytes([x]) for x in word_bytes]#[b'h',b'e',b'l',b'l',b'o']
         token_freq[tuple(bytes_list)]+=1
-        
-    '''
+
+    
     #二、初始化字节对
     pair_count=defaultdict(int)
     for piece in token_freq.keys():
@@ -89,8 +82,59 @@ def train_bpe(input_path,vocab_size,special_tokens):
             new_token_freq[tuple(new_tok)]+=freq
         token_freq=new_token_freq
         next_ID+=1
-    '''
-    pair_count=PairCount(token_freq) #初始化字节对
+        
+    return vocab,merges
+'''
+
+import regex as re
+import re as builtin_re
+from collections import defaultdict
+
+
+def train_bpe(input_path,vocab_size,special_tokens):
+
+    vocab = {i: bytes([i]) for i in range(256)}
+    merges=[]
+
+    next_ID=256
+    for tok in special_tokens:
+        tok_bytes=tok.encode("utf-8")
+        if tok_bytes not in set(vocab.values()):
+            vocab[next_ID]=tok_bytes
+            next_ID+=1
+
+    #一、分割文本，每个word，标点等转为bytes，并统计频率
+    PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+    special_pattern='|'.join(builtin_re.escape(tok) for tok in special_tokens) 
+
+    with open(input_path,'r') as f:
+        content=f.read()
+
+    parts=builtin_re.split(f'{special_pattern}',content) #把文本按照special_tokens分割为大块,同时special_tokens作为独立元素保留在结果
+    normal_parts=[p for p in parts if p not in special_tokens] 
+
+    #在大分割里小分割，按照空格和标点，由每一大块得到['hello','world',...]
+    pieces=[]
+    for p in normal_parts:
+        piece=re.findall(PAT,p) 
+        pieces.extend(piece) #pieces中元素为word
+    
+    token_freq=defaultdict(int)
+    for word in pieces: 
+        word_bytes=word.encode('utf-8')
+        bytes_list=[bytes([x]) for x in word_bytes]#[b'h',b'e',b'l',b'l',b'o']
+        token_freq[tuple(bytes_list)]+=1
+        
+    
+    #二、初始化字节对
+    pair_count=defaultdict(int)
+    for piece in token_freq.keys():
+        for i in range(len(piece)-1):
+            pair=(piece[i],piece[i+1])
+            pair_count[pair]+=token_freq[piece] # {(pair_bytes):count,...}
+
+    
+    #三、合并循环
     while len(vocab)<vocab_size:
         if not pair_count:
             break
@@ -101,27 +145,34 @@ def train_bpe(input_path,vocab_size,special_tokens):
 
         vocab[next_ID]=merge_pair[0]+merge_pair[1] #eg.['h','i'] -> ['hi'],注意要先把token转换为字符
         merges.append(merge_pair)
+        merged_token=vocab[next_ID]
 
-        #更新oken_freq
+        #更新pair_count, token_freq
         new_token_freq=defaultdict(int)
         for tok,freq in token_freq.items():
             i=0
             new_tok=[]
             while i<len(tok):
                 if i<len(tok)-1 and (tok[i],tok[i+1])==merge_pair :
-                    new_tok.append(vocab[next_ID])
-                    i+=2
+                    new_tok.append(merged_token)
+                    i+=2                    
                 else:
                     new_tok.append(tok[i])
                     i+=1
             new_token_freq[tuple(new_tok)]+=freq
         token_freq=new_token_freq
-    
-        #更新pair_count
-        pair_count=PairCount(token_freq)
+
+        pair_count=defaultdict(int)
+        for piece in token_freq.keys():
+            for i in range(len(piece)-1):
+                pair=(piece[i],piece[i+1])
+                pair_count[pair]+=token_freq[piece]
 
         next_ID+=1
+        
     return vocab,merges
+    
 
+    
 
     
