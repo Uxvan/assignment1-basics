@@ -89,9 +89,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
 import regex as re
 import re as builtin_re
 from collections import defaultdict
-import heapq
-
-
+    
 def train_bpe(input_path,vocab_size,special_tokens):
 
     vocab = {i: bytes([i]) for i in range(256)}
@@ -120,70 +118,71 @@ def train_bpe(input_path,vocab_size,special_tokens):
         piece=re.findall(PAT,p) 
         pieces.extend(piece) #pieces中元素为word
     
-    token_freq=defaultdict(int)
+    token_freq=defaultdict(int) #{(token):int,...}
     for word in pieces: 
         word_bytes=word.encode('utf-8')
-        bytes_list=[bytes([x]) for x in word_bytes]#[b'h',b'e',b'l',b'l',b'o']
-        token_freq[tuple(bytes_list)]+=1
-        
-    
-    #二、初始化字节对
-    pair_count=defaultdict(int)
-    for piece in token_freq.keys():
-        for i in range(len(piece)-1):
-            pair=(piece[i],piece[i+1])
-            pair_count[pair]+=token_freq[piece] # {(pair_bytes):count,...}
+        bytes_list=[bytes([x]) for x in word_bytes]#[b'h',b'e',b'l',b'l',b'o'], 化为元组则为token
+        token_freq[tuple(bytes_list)]+=1 #统计token频率
 
     
-    heap=[(-count,pair) for pair,count in pair_count.items()]
-    heapq.heapify(heap)
-    
+    #二、初始化pair_count:{(pair):count,...}; pair_token:{(pair):(token1,...)}, 哪些token包含某个pair
+    pair_count=defaultdict(int)
+    pair_token=defaultdict(set) #对于token[a,a,a]，set保证对于pair(a,a)，不会出现两次该token
+    for tok in token_freq.keys():
+        for i in range(len(tok)-1):
+            pair=(tok[i],tok[i+1])
+            pair_count[pair]+=token_freq[tok] 
+            pair_token[pair].add(tok)
+
 
     #三、合并循环
     while len(vocab)<vocab_size:
         if not pair_count:
             break
 
-        while heap:
-            neg_count,pair=heapq.heappop(heap)
-            if neg_count != -pair_count.get(pair,0):
-                continue
-            merge_pair=pair
-            break
+        max_count=max(pair_count.values()) #最大频率
+        max_pairs=[k for k,v in pair_count.items() if v==max_count] #一列有最大出现频率的pairs
+        merge_pair=max(max_pairs) #选择最大字节序
 
         vocab[next_ID]=merge_pair[0]+merge_pair[1] #eg.['h','i'] -> ['hi'],注意要先把token转换为字符
         merges.append(merge_pair)
-        merged_token=vocab[next_ID]
 
-        #更新heap,pair_count,token_freq
-        new_token_freq=defaultdict(int)
-        for tok,freq in token_freq.items():
+        #更新pair_count, pair_token
+        pair_count.pop(merge_pair)
+        for tok in pair_token[merge_pair]:
             i=0
-            new_tok=[]
+            new_tok=[] #bytes合并后得到的tok
             while i<len(tok):
                 if i<len(tok)-1 and (tok[i],tok[i+1])==merge_pair :
-                    if i+2<len(tok):#减去右邻pair,加上新右邻
+                    freq=token_freq[tok]
+                    if i+2<len(tok):
+                        #更新pair_count减去右邻pair,加上新右邻
                         pair_count[(tok[i+1],tok[i+2])]-=freq #以merge_pair=ab为例，减去[d,a,b,c]中的pair(b,c)个数
-                        pair_count[(merged_token,tok[i+2])]+=freq #添加(ab,c)
-                        heapq.heappush(heap, (-pair_count[(tok[i+1],tok[i+2])],(tok[i+1],tok[i+2])))
-                        heapq.heappush(heap, (-pair_count[(merged_token,tok[i+2])],(merged_token,tok[i+2])))
-                    if  i>0:#减去旧左邻,加上新左邻
+                        pair_count[(vocab[next_ID],tok[i+2])]+=freq #添加(ab,c)
+                        #pair_token引入新pair与对应token
+                        pair_token[(vocab[next_ID],tok[i+2])].add(tok)
+                        
+                    if  i>0:
+                        #更新pair_count减去旧左邻,加上新左邻
                         pair_count[(tok[i-1],tok[i])]-=freq
-                        pair_count[(tok[i-1],merged_token)]+=freq
-                        heapq.heappush(heap, (-pair_count[(tok[i-1],tok[i])],(tok[i-1],tok[i])))
-                        heapq.heappush(heap, (-pair_count[(tok[i-1],merged_token)],(tok[i-1],merged_token)))
+                        pair_count[(tok[i-1],vocab[next_ID])]+=freq
 
-                    new_tok.append(merged_token)
+                        pair_token[(tok[i-1],vocab[next_ID])].add(tok)
+
+                    new_tok.append(vocab[next_ID])
                     i+=2
                     
                 else:
                     new_tok.append(tok[i])
                     i+=1
-            new_token_freq[tuple(new_tok)]+=freq
-        token_freq=new_token_freq
+            token_freq[tuple(new_tok)]=token_freq.pop(tok)
+            
+        for tok in token_freq.keys():
+            for i in range(len(tok)-1):
+                pair=(tok[i],tok[i+1])
+                pair_token[pair].add(tok)
+            
         next_ID+=1
         
     return vocab,merges
-    
-
     
