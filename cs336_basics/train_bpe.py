@@ -147,7 +147,7 @@ def train_bpe(input_path,vocab_size,special_tokens):
         vocab[next_ID]=merge_pair[0]+merge_pair[1] #eg.['h','i'] -> ['hi'],注意要先把token转换为字符
         merges.append(merge_pair)
 
-        #更新pair_count, pair_token
+        #更新pair_count, token_freq
         pair_count.pop(merge_pair)
         for tok in pair_token[merge_pair]:
             i=0
@@ -166,7 +166,6 @@ def train_bpe(input_path,vocab_size,special_tokens):
                         #更新pair_count减去旧左邻,加上新左邻
                         pair_count[(tok[i-1],tok[i])]-=freq
                         pair_count[(tok[i-1],vocab[next_ID])]+=freq
-
                         pair_token[(tok[i-1],vocab[next_ID])].add(tok)
 
                     new_tok.append(vocab[next_ID])
@@ -175,14 +174,15 @@ def train_bpe(input_path,vocab_size,special_tokens):
                 else:
                     new_tok.append(tok[i])
                     i+=1
-            token_freq[tuple(new_tok)]=token_freq.pop(tok)
-            
-        for tok in token_freq.keys():
+            new_tok=tuple(new_tok)
+            token_freq[new_tok]=token_freq.pop(tok)
+        
+            #更新pair_token
+            pair_token.pop(merge_pair)
             for i in range(len(tok)-1):
-                pair=(tok[i],tok[i+1])
-                pair_token[pair].add(tok)
-            
+                pair_token[(tok[i],tok[i+1])].discard(tok)
+                pair_token[(tok[i],tok[i+1])].add(new_tok)
+
         next_ID+=1
         
     return vocab,merges
-    
