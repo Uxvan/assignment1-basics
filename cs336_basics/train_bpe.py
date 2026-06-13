@@ -146,27 +146,32 @@ def train_bpe(input_path,vocab_size,special_tokens):
 
         vocab[next_ID]=merge_pair[0]+merge_pair[1] #eg.['h','i'] -> ['hi'],注意要先把token转换为字符
         merges.append(merge_pair)
+        merge_bytes=vocab[next_ID]
 
-        #更新pair_count, token_freq
+        #更新pair_count, token_freq, pair_token.                       
         pair_count.pop(merge_pair)
-        for tok in pair_token[merge_pair]:
+        affected_pairs=list(pair_token.pop(merge_pair))
+        for tok in affected_pairs:
+            freq=token_freq[tok]
             i=0
             new_tok=[] #bytes合并后得到的tok
+
             while i<len(tok):
                 if i<len(tok)-1 and (tok[i],tok[i+1])==merge_pair :
-                    freq=token_freq[tok]
+                    
                     if i+2<len(tok):
                         #更新pair_count减去右邻pair,加上新右邻
                         pair_count[(tok[i+1],tok[i+2])]-=freq #以merge_pair=ab为例，减去[d,a,b,c]中的pair(b,c)个数
-                        pair_count[(vocab[next_ID],tok[i+2])]+=freq #添加(ab,c)
+                        pair_count[(merge_bytes,tok[i+2])]+=freq #添加(ab,c)
                         #pair_token引入新pair与对应token
-                        pair_token[(vocab[next_ID],tok[i+2])].add(tok)
+                        pair_token[(merge_bytes,tok[i+2])].add(tok)
                         
                     if  i>0:
                         #更新pair_count减去旧左邻,加上新左邻
                         pair_count[(tok[i-1],tok[i])]-=freq
-                        pair_count[(tok[i-1],vocab[next_ID])]+=freq
-                        pair_token[(tok[i-1],vocab[next_ID])].add(tok)
+                        pair_count[(tok[i-1],merge_bytes)]+=freq
+                        #pair_token引入新pair与对应token
+                        pair_token[(tok[i-1],merge_bytes)].add(tok)
 
                     new_tok.append(vocab[next_ID])
                     i+=2
@@ -178,11 +183,11 @@ def train_bpe(input_path,vocab_size,special_tokens):
             f=token_freq.pop(tok)
             token_freq[new_tok]=f
         
-            #更新pair_token
-            pair_token.pop(merge_pair)
-            for i in range(len(tok)-1):
-                pair_token[(tok[i],tok[i+1])].discard(tok)
-                pair_token[(tok[i],tok[i+1])].add(new_tok)
+            #把pair_token里所有pair对应的‘tok’换为new_tok, 只需看new_tok对应哪些pair (pair_token中merge_pair已删除，并加入了新的pair)
+            for i in range(len(new_tok)-1):
+                p=(new_tok[i],new_tok[i+1])
+                pair_token[p].discard(tok)
+                pair_token[p].add(new_tok)
 
         next_ID+=1
         
