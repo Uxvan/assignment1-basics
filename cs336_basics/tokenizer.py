@@ -20,7 +20,7 @@ class Tokenizer:
     def encode(self,text:str)->list[int]:
 
         byte_txt=[bytes([x]) for x in list(text.encode())]
-        id_txt=[self.byte_to_id[byte_txt[i:i+1]] for i in range(byte_txt)]
+        id_txt=[self.byte_to_id[byte_txt[i:i+1]] for i in range(len(byte_txt))]
         id_pairs=list(zip(id_txt[:-1],id_txt[1:]))
 
         #按merges优先级找应该被合并的项
