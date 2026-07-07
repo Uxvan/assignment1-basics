@@ -48,6 +48,7 @@ class Tokenizer:
                     if i<len(id_pairs)-1:
                         id_pairs[i+1]=(new_id,id_txt[i+2])
                     del id_pairs[i]
+                    del id_pairs[i+1]
                 else:
                     i+=1
             j+=1
