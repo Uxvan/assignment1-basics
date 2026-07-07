@@ -6,9 +6,9 @@ class Tokenizer:
     def __init__(self,vocab,merges,special_tokens=None):
         self.vocab=vocab
         self.merges=merges
-        self.special_tokens=special_tokens
+        self.special_tokens=special_tokens or []
         self.byte_to_id={v:k for k,v in self.vocab.items()}
-        self.sp_tok_id={v:self.byte_to_id[bytes([v])] for v in self.special_tokens}
+        self.sp_tok_id={v:self.byte_to_id[v.encode()] for v in self.special_tokens}
         self.merges_to_id=[(self.byte_to_id[x],self.byte_to_id[y]) for x,y in merges]
 
     @classmethod
