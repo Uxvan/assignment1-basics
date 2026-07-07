@@ -1,11 +1,14 @@
 import pickle
-
+import re as builtin_re
+PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+    
 class Tokenizer:
     def __init__(self,vocab,merges,special_tokens=None):
         self.vocab=vocab
         self.merges=merges
         self.special_tokens=special_tokens
         self.byte_to_id={v:k for k,v in self.vocab.items()}
+        self.sp_tok_id={v:self.byte_to_id[bytes([v])] for v in self.special_tokens}
         self.merges_to_id=[(self.byte_to_id[x],self.byte_to_id[y]) for x,y in merges]
 
     @classmethod
@@ -19,7 +22,15 @@ class Tokenizer:
 
     def encode(self,text:str)->list[int]:
 
-        id_txt=[self.byte_to_id[bytes([x])] for x in text.encode()]
+        special_pattern='|'.join(builtin_re.escape(tok) for tok in self.special_tokens) 
+        parts=builtin_re.split(f'{special_pattern}',text) #把文本按照special_tokens分割为大块,同时special_tokens作为独立元素保留在结果
+        id_txt=[]
+        for p in parts:
+            if p in self.special_tokens:
+                id_txt.append(self.sp_tok_id[p])
+            else:
+                id_txt.extend([self.byte_to_id[bytes([x])] for x in p.encode()])
+
         id_pairs=list(zip(id_txt[:-1],id_txt[1:]))
 
         #按merges优先级找应该被合并的项
