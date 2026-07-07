@@ -1,6 +1,7 @@
 import regex as re
 import re as builtin_re
 from collections import defaultdict
+import pickle
     
 def train_bpe(input_path,vocab_size,special_tokens):
 
@@ -102,5 +103,12 @@ def train_bpe(input_path,vocab_size,special_tokens):
                 pair_token[p].add(new_tok)
 
         next_ID+=1
+        
+    #写为文件
+    with open('vocab.pkl','wb') as f:
+        pickle.dump(vocab,f)
+    
+    with open('merges.pkl','wb') as f:
+        pickle.dump(merges,f)
         
     return vocab,merges
