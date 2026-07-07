@@ -18,7 +18,7 @@ class Tokenizer:
 
         #找应该被合并的项
         i=0
-        while i<len(int_pairs):
+        while i<len(list(int_pairs)):
             p=int_pairs[i]
             byte_p=(self.vocab(p[0]),self.vocab(p[1]))
             merged_bytes=bytes(p)
