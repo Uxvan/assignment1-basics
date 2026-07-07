@@ -130,6 +130,7 @@ class Tokenizer:
                             else:
                                 i+=1
                         j+=1
+                    all_id_to_txt.extend(id_txt)
         return all_id_to_txt
         
         
