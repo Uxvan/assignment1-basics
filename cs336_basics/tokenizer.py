@@ -22,8 +22,9 @@ class Tokenizer:
 
     def encode(self,text:str)->list[int]:
 
+        sorted_sp_toks=sorted(self.special_tokens,key=len,reverse=True)#当special_tokens里元素有包含关系，如果按照给定顺序可能会让短的先匹配，长的失去机会eg."<|endoftext|>" 和 "<|endoftext|><|endoftext|>" 
         special_pattern='|'.join(builtin_re.escape(tok) for tok in self.special_tokens) 
-        parts=builtin_re.split(f'{special_pattern}',text) #把文本按照special_tokens分割为大块,同时special_tokens作为独立元素保留在结果
+        parts=builtin_re.split(f'({special_pattern})',text) #把文本按照special_tokens分割为大块,同时special_tokens作为独立元素保留在结果
         id_txt=[]
         for p in parts:
             if p in self.special_tokens:
