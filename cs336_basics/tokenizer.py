@@ -97,8 +97,11 @@ class Tokenizer:
 
     def encode(self,text:str)->list[int]:
 
-        special_pattern='|'.join(builtin_re.escape(tok) for tok in self.sorted_sp_toks) 
-        parts=builtin_re.split(f'({special_pattern})',text) #把文本按照special_tokens分割为大块,同时special_tokens作为独立元素保留在结果
+        if self.sorted_sp_toks:
+            special_pattern='|'.join(builtin_re.escape(tok) for tok in self.sorted_sp_toks) 
+            parts=builtin_re.split(f'({special_pattern})',text) #把文本按照special_tokens分割为大块,同时special_tokens作为独立元素保留在结果
+        else:#如果special_tokens为空，special_pattern 会是空字符串 ''，这时 builtin_re.split('()', text) 会在每个字符之间都切一刀，所以最好跳过分割
+            parts=text
         
         all_id_to_txt=[]
         for p in parts:
