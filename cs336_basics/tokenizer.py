@@ -148,10 +148,13 @@ class Tokenizer:
                             del piece_id[min_prior_index+1]
 
                             if min_prior_index>0:
-                                pairs_priority[min_prior_index-1]=self.merges_to_priority.get((piece_bytes[min_prior_index-1:min_prior_index],merged_byte),-1)
+                                last=self.vocab[piece_id[min_prior_index-1]]
+                                pairs_priority[min_prior_index-1]=self.merges_to_priority.get((last,merged_byte),-1)
                             if min_prior_index<len(pairs_priority)-1:
-                                pairs_priority[min_prior_index+1]=self.merges_to_priority.get((merged_byte,piece_bytes[min_prior_index+2:min_prior_index+3]),-1)
+                                next=self.vocab[piece_id[min_prior_index+1]]
+                                pairs_priority[min_prior_index+1]=self.merges_to_priority.get((merged_byte,next),-1)
                             del pairs_priority[min_prior_index]
+                            
                         else:
                             break
 
