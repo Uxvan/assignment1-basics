@@ -140,7 +140,7 @@ class Tokenizer:
                             
                             min_prior_index=pairs_priority.index(min_prior)
                             min_prior_pair_id=pairs_id[min_prior_index]
-                            merged_byte=self.vocab[min_prior_pair_id[0]]+self.vocab[min_prior_pair_id[0]][1] #合并结果
+                            merged_byte=self.vocab[min_prior_pair_id[0]]+self.vocab[min_prior_pair_id[1]] #合并结果
                             merged_id=self.byte_to_id[merged_byte]#合并结果对应id
 
                             #修改piece_id和pairs_priority
