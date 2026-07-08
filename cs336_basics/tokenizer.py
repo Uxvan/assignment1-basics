@@ -143,17 +143,21 @@ class Tokenizer:
                             merged_byte=self.vocab[min_prior_pair_id[0]]+self.vocab[min_prior_pair_id[1]] #合并结果
                             merged_id=self.byte_to_id[merged_byte]#合并结果对应id
 
-                            #修改piece_id和pairs_priority
+                            #修改piece_id和pairs_priority, pairs_id
                             piece_id[min_prior_index]=merged_id
                             del piece_id[min_prior_index+1]
 
                             if min_prior_index>0:
                                 last=self.vocab[piece_id[min_prior_index-1]]
                                 pairs_priority[min_prior_index-1]=self.merges_to_priority.get((last,merged_byte),-1)
+                                pairs_id[min_prior_index-1]=(pairs_id[min_prior_index-1][0],merged_id)
                             if min_prior_index<len(pairs_priority)-1:
                                 next=self.vocab[piece_id[min_prior_index+1]]
                                 pairs_priority[min_prior_index+1]=self.merges_to_priority.get((merged_byte,next),-1)
+                                pairs_id[min_prior_index+1]=(merged_id,pairs_id[min_prior_index+1][1])
                             del pairs_priority[min_prior_index]
+                            del pairs_id[min_prior_index]
+
                             
                         else:
                             break
