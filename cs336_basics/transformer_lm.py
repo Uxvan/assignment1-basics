@@ -23,21 +23,28 @@ class Linear(nn.Module):
 
 class Embedding(nn.Module):
     '''
-    num_embeddings: int Size of the vocabulary
+    num_embeddings: int Size of the vocabulary, i.e. vocab_size
     embedding_dim: int Dimension of the embedding vectors, i.e., d_model
+
+    forward方法中, 传入形状为(batch_size, sequence_length)的torch.LongTensor(里面存的是token_id),
+    然后用它去索引一个(vocab_size, d_model)的嵌入矩阵, 这样为每个token ID取出对应嵌入向量
     '''
     def __init__(self, num_embeddings, embedding_dim, device=None, dtype=None):
         super().__init__()
         self.num_embeddings=num_embeddings
         self.d_model=embedding_dim
-        self.embed_matrix=nn.Parameter(
-            nn.init.trunc_normal_((self.num_embeddings,self.d_model),mean=0,std=1,a=-3,b=3)
-            )
+        self.embed_matrix=nn.Parameter(torch.empty((num_embeddings, embedding_dim), device=device, dtype=dtype))
         self.device=device
         self.dtype=dtype
+        self.init_matrix()
+
+    def init_matrix(self):
+        nn.init.trunc_normal_(self.embed_matrix,mean=0,std=1,a=-3,b=3)
+        
     def forward(self, token_ids: torch.Tensor) -> torch.Tensor:
-        embed_vectors=self.embed_matrix[token_ids]
-        return embed_vectors
+        embed_vectors=self.embed_matrix[token_ids]      # (batch_size, seq_len, d_model)
+        return embed_vectors 
+        
     
 
 class RMSNorm(nn.Module):
