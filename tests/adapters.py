@@ -32,7 +32,8 @@ def run_linear(
     #raise NotImplementedError
     from cs336_basics.transformer_lm import Linear
     linear=Linear(d_in,d_out)
-    linear.weight.copy_(weights.T)
+    with torch.no_grad():
+        linear.weight.copy_(weights.T)
     return linear(in_features)
 
 
