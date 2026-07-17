@@ -8,14 +8,17 @@ class Linear(nn.Module):
         super().__init__()
         self.in_dim=in_features
         self.out_dim=out_features
-        self.weight=nn.Parameter(
-            nn.init.trunc_normal_((self.out_dim,self.in_dim),mean=0,std=2/(self.in_dim+self.out_dim),a=-3,b=3)
-            )
+        self.weight=nn.Parameter(torch.empty((in_features, out_features), device=device, dtype=dtype))
         self.device=device
         self.dtype=dtype
+        self.init_weight()
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        result=self.weight @ x
+        result= x @ self.weight
         return result
+    def init_weight(self):
+        std=(2/(self.in_dim+self.out_dim))**0.5
+        nn.init.trunc_normal_(self.weight,mean=0,std=std,a=-3*std,b=3*std)
     
 
 class Embedding(nn.Module):
