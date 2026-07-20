@@ -97,9 +97,9 @@ def run_swiglu(
     from cs336_basics.transformer_lm import PositionwiseFeedforward
     swiglu=PositionwiseFeedforward(d_model,d_ff)
     with torch.no_grad():
-        swiglu.w1.copy_(w1_weight)
-        swiglu.w2.copy_(w2_weight)
-        swiglu.w3.copy_(w3_weight)
+        swiglu.w1.weight.copy_(w1_weight)
+        swiglu.w2.weight.copy_(w2_weight)
+        swiglu.w3.weight.copy_(w3_weight)
     return swiglu(in_features)
 
 
