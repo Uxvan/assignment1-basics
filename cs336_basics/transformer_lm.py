@@ -76,7 +76,7 @@ class PositionwiseFeedforward(nn.Module):
     '''
      d_ff: Dimensionality of the position-wise feed-forward inner layer.
     '''
-    super.__init__()
+    super().__init__()
     def __init__(self, d_model, d_ff:int):     
         self.d_ff=d_ff
         self.d_model=d_model
