@@ -52,15 +52,14 @@ class RMSNorm(nn.Module):
         super().__init__()
         self.d_model=d_model
         self.eps=eps
-        self.g=nn.Parameter(
-            torch.ones(self.d_model)
-        )
+        self.g=nn.Parameter(torch.ones(self.d_model))
         self.device=device
         self.dtype=dtype
+    
     def forward(self, x: torch.Tensor): #x:(batch_size, sequence_length, d_model)
         in_dtype=x.dtype
         x=x.to(torch.float32)
-        rms=1/((x*x.sum(dim=2)/self.d_model+self.eps).sqrt())
+        rms=1/(((x*x).sum(dim=-1)/self.d_model+self.eps).sqrt())
         normed_x=einsum(
             x,rms,
             'batch_size sequence_length d_model, batch_size sequence_length -> batch_size sequence_length d_model' 
