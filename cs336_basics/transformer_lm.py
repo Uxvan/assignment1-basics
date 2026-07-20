@@ -76,11 +76,12 @@ class PositionwiseFeedforward(nn.Module):
     '''
      d_ff: Dimensionality of the position-wise feed-forward inner layer.
     '''
-    def __init__(self,d_ff:int):     
+    def __init__(self, d_model, d_ff:int):     
         self.d_ff=d_ff
-        self.w1=nn.Linear(self.d_model,self.d_ff,bias=False) #nn.Linear内部权重和bias自动保存在nn.Parameters中
-        self.w2=nn.Linear(self.d_ff,self.d_model,bias=False)
-        self.w3=nn.Linear(self.d_model,self.d_ff,bias=False)
+        self.d_model=d_model
+        self.w1=nn.Linear(d_model,d_ff,bias=False) #nn.Linear内部权重和bias自动保存在nn.Parameters中
+        self.w2=nn.Linear(d_ff,d_model,bias=False)
+        self.w3=nn.Linear(d_model,d_ff,bias=False)
     def forward(self,x): # FFN(𝑥) = SwiGLU(𝑥, 𝑊1, 𝑊2, 𝑊3) = 𝑊2 (SiLU(𝑊1𝑥) ⊙ 𝑊3𝑥),
         y1=self.w1(x)
         silu= y1 * torch.sigmoid(y1)
