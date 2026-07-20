@@ -76,8 +76,8 @@ class PositionwiseFeedforward(nn.Module):
     '''
      d_ff: Dimensionality of the position-wise feed-forward inner layer.
     '''
-    super().__init__()
-    def __init__(self, d_model, d_ff:int):     
+    def __init__(self, d_model, d_ff:int):    
+        super().__init__()
         self.d_ff=d_ff
         self.d_model=d_model
         self.w1=nn.Linear(d_model,d_ff,bias=False) #nn.Linear内部权重和bias自动保存在nn.Parameters中
