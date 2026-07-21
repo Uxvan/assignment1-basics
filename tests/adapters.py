@@ -214,7 +214,7 @@ def run_multihead_self_attention_with_rope(
         mha.W_K.weight.copy_(k_proj_weight)
         mha.W_V.weight.copy_(v_proj_weight)
         mha.W_O.weight.copy_(o_proj_weight)
-    return mha(in_features, rope=True, theta, token_positions, max_seq_len)
+    return mha(in_features, True, theta, token_positions, max_seq_len)
 
 
 def run_rope(
