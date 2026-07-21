@@ -160,7 +160,7 @@ class MultiHeadselfAttention(nn.Module):
     d_model: Dimensionality of the Transformer block inputs;
     num_heads: Number of heads
     '''                                    
-    def __init__(self, d_model:int, num_heads:int, theta:float, max_seq_len:int): 
+    def __init__(self, d_model:int, num_heads:int,  max_seq_len:int): 
         super().__init__() 
         self.d_model=d_model
         self.num_heads=num_heads
@@ -169,23 +169,22 @@ class MultiHeadselfAttention(nn.Module):
         self.W_K=nn.Linear(self.d_k,d_model,bias=False)
         self.W_V=nn.Linear(self.d_v,d_model,bias=False)
         self.W_O=nn.Linear(d_model,self.d_v,bias=False)
-        self.rope=RotaryPositionalEmbedding(theta, self.d_k, max_seq_len)
 
-    def casual_masking(self,max_seq_len):
-        x=torch.ones((max_seq_len,max_seq_len))
-        mask=torch.triu(x, diagonal=-1).bool()
-
-    def forward(self, x, token_positions, mask=None):    # x:(...,seq_len,d_model)
+    def forward(self, x, rope:bool=False, theta:float=None, token_positions=None):    # x:(...,seq_len,d_model)
         seq_len=x.shape[-2]
-        mask=self.casual_masking(seq_len)
+        # 创建mask
+        y=torch.ones((seq_len,seq_len))
+        casual_mask=torch.triu(y, diagonal=-1).bool()
 
-        x.reshape(*x.shape[:-1],self.num_heads,-1)      # x:(...,seq_len,num_heads,head_dim)
+        x.reshape(*x.shape[:-1],self.num_heads,-1)      # x -> (...,seq_len,num_heads,head_dim)
         Q, K, V=self.W_Q(x), self.W_K(x), self.W_V(x)
 
-        RoPE_Q=self.rope(Q,token_positions)
-        RoPE_K=self.rope(K,token_positions)
+        if rope:
+            self.rope=RotaryPositionalEmbedding(theta, self.d_k, seq_len)            
+            Q=self.rope(Q,token_positions)
+            K=self.rope(K,token_positions)
 
-        multi_atten=scaled_dot_product_attention(RoPE_Q,RoPE_K,V,mask)
+        multi_atten=scaled_dot_product_attention(Q, K, V, casual_mask)
         multi_atten=multi_atten.reshape(*x.shape[:-2], self.d_model)
         out_atten=self.W_O(multi_atten)
 
