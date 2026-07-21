@@ -215,7 +215,7 @@ class TransformerBlock(nn.Module):
         out1= x+ self.mha(y, True, self.theta, self.token_positions, self.max_seq_len)
        
         z=self.norm2(out1)
-        out2= out1 +self.ffn(z, self.ff(z))   # out2: (..., seq_len, d_model)
+        out2= out1 +self.ffn(z, self.ffn(z))   # out2: (..., seq_len, d_model)
 
         return out2
     
