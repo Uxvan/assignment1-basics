@@ -164,7 +164,7 @@ class MultiHeadselfAttention(nn.Module):
         super().__init__() 
         self.d_model=d_model
         self.num_heads=num_heads
-        self.d_k, self.d_v=d_model/num_heads, d_model/num_heads       # 等同于head_dim
+        self.d_k, self.d_v=d_model//num_heads, d_model//num_heads       # 等同于head_dim
         self.W_Q=nn.Linear(self.d_k,d_model,bias=False)
         self.W_K=nn.Linear(self.d_k,d_model,bias=False)
         self.W_V=nn.Linear(self.d_v,d_model,bias=False)
