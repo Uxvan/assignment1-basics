@@ -139,15 +139,16 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     d_k=Q.shape[-1]                                    
     dot_product=einsum(
         Q,K,
-        '... seq_len d_k, ... seq_len d_k  ->  ... seq_len seq_len'
+        '... seq_len_q d_k, ... seq_len_k d_k  ->  ... seq_len_q seq_len_k'     # 给两个 seq_len 分别起名, 否则einsum会报错
     )/(d_k**0.5)
 
-    if mask:
-        dot_product[mask==False]=float('-inf')
+    if mask is not None:       # 不用 'if mask', 防止张量真值歧义
+        dot_product= dot_product.masked_fill(mask==False, float('-inf')) # 不用 dot_product[mask==False]=float('-inf')原地修改，
+                                                                         # 防止autograd计算图出错
 
     attention=einsum(
         softmax(dot_product,-1), V,
-        '... seq_len seq_len, ... seq_len d_v -> ... seq_len d_v'
+        '... seq_len_q seq_len_k, ... seq_len_k d_v -> ... seq_len_q d_v'
     )
     return attention
 
