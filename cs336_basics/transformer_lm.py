@@ -178,17 +178,17 @@ class MultiHeadselfAttention(nn.Module):
                                     diagonal=-1).bool()
 
         Q, K, V=self.W_Q(x), self.W_K(x), self.W_V(x)
-        Q = Q.reshape(*Q.shape[:-1], self.num_heads, self.d_k)
-        K = K.reshape(*K.shape[:-1], self.num_heads, self.d_k)
-        V = V.reshape(*V.shape[:-1], self.num_heads, self.d_v)      #  -> (...,seq_len,num_heads,head_dim)
+        Q = Q.reshape(*Q.shape[:-1], self.num_heads, self.d_k).transpose(-2,-3)
+        K = K.reshape(*K.shape[:-1], self.num_heads, self.d_k).transpose(-2,-3)
+        V = V.reshape(*V.shape[:-1], self.num_heads, self.d_v).transpose(-2,-3)      #  -> (...,seq_len,num_heads,head_dim) -> (...,num_heads,seq_len,head_dim)
 
         if rope:
             self.rope=RotaryPositionalEmbedding(theta, self.d_k, max_seq_len)            
             Q=self.rope(Q,token_positions)
             K=self.rope(K,token_positions)
 
-        multi_atten=scaled_dot_product_attention(Q, K, V, casual_mask)
-        multi_atten=multi_atten.reshape(*x.shape[:-1], self.d_model)
+        multi_atten=scaled_dot_product_attention(Q, K, V, casual_mask)     # (...,num_heads,seq_len,d_v)
+        multi_atten=multi_atten.transpose(-2,-3).reshape(*x.shape[:-1], self.d_model)
         out_atten=self.W_O(multi_atten)
 
         return out_atten
