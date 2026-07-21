@@ -136,7 +136,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
     Attention(𝑄, 𝐾, 𝑉 ) = softmax(𝑄𝐾^𝑇/√𝑑𝑘 )𝑉
     '''
-    d_k=Q.size[-1]                                    
+    d_k=Q.shape[-1]                                    
     dot_product=einsum(
         Q,K,
         '... seq_len d_k, ... seq_len d_k  ->  ... seq_len seq_len'
