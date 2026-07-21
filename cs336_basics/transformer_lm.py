@@ -96,6 +96,7 @@ class RotaryPositionalEmbedding(nn.Module):
     '''
     d_k: dimension of query and key vectors
     seq_len表示token个数
+    max_seq_len表示模型配置的"最大可能序列长度"
     '''
     def __init__(self, theta: float, d_k: int, max_seq_len: int, device=None): 
         super().__init__()
@@ -108,7 +109,9 @@ class RotaryPositionalEmbedding(nn.Module):
         cos_value=torch.cos(angle).to(device)
         self.register_buffer('sin_value',sin_value)
         self.register_buffer('cos_value',cos_value)
-    def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor: # token_positions:(..., seq_len), x:(..., seq_len,d_k)
+    def forward(self, x: torch.Tensor, token_positions: torch.Tensor =None) -> torch.Tensor: # token_positions:(..., seq_len), x:(..., seq_len,d_k)
+        if token_positions==None:
+            token_positions=torch.arange(x.shape[-2])
         choosen_sin=self.sin_value[token_positions].unsqueeze(-3)               # (..., seq_len, d_k//2) -> (..., 1, seq_len, d_k//2), 方便多头注意力时num_heads维的广播
         choosen_cos=self.cos_value[token_positions].unsqueeze(-3) 
         x_odd=x[...,0::2]
@@ -194,22 +197,25 @@ class MultiHeadselfAttention(nn.Module):
 
 class TransformerBlock(nn.Module):
 
-    def __init__(self, d_model:int, num_heads:int, d_ff:int, theta:float, max_seq_len:int, token_positions:torch.tensor):
+    def __init__(self, d_model:int, num_heads:int, d_ff:int, max_seq_len:int, theta:float, token_positions=None):
         super().__init__()
         self.d_model=d_model
         self.num_heads=num_heads
         self.d_ff=d_ff
+        self.max_seq_len=max_seq_len
+        self.theta=theta
         self.token_positions=token_positions
-        self.norm=RMSNorm(self.d_model)
-        self.mha=MultiHeadselfAttention(d_model, num_heads, theta, max_seq_len)
-        self.ff=PositionwiseFeedforward(d_ff)
+        self.norm1=RMSNorm(d_model)
+        self.norm2=RMSNorm(d_model)
+        self.mha=MultiHeadselfAttention(d_model, num_heads)
+        self.ffn=PositionwiseFeedforward(d_model,d_ff)
 
     def forward(self, x):
-        y=self.norm(x)
-        out1= x+ self.mha(y,self.token_positions)
+        y=self.norm1(x)
+        out1= x+ self.mha(y, True, self.theta, self.token_positions, self.max_seq_len)
        
-        z=self.norm(out1)
-        out2= out1 +self.ff(z, self.ff(z))   # out2: (..., seq_len, d_model)
+        z=self.norm2(out1)
+        out2= out1 +self.ffn(z, self.ff(z))   # out2: (..., seq_len, d_model)
 
         return out2
     
