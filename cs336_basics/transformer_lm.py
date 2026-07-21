@@ -140,7 +140,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     dot_product=einsum(
         Q,K,
         '... seq_len d_k, ... seq_len d_k  ->  ... seq_len seq_len'
-    )/d_k.sqrt()
+    )/(d_k**0.5)
 
     if mask:
         dot_product[mask==False]=float('-inf')
