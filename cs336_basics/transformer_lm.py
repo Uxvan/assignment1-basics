@@ -173,7 +173,7 @@ class MultiHeadselfAttention(nn.Module):
     def forward(self, x, rope:bool=False, theta:float=None, token_positions=None, max_seq_len:int=None):    # x:(...,seq_len,d_model)
         seq_len=x.shape[-2]
         # 创建mask
-        casual_mask=torch.triu(torch.ones(seq_len,seq_len)).bool()
+        casual_mask=torch.tril(torch.ones(seq_len,seq_len)).bool()
 
         Q, K, V=self.W_Q(x), self.W_K(x), self.W_V(x)
         Q = Q.reshape(*Q.shape[:-1], self.num_heads, self.d_k).transpose(-2,-3)
