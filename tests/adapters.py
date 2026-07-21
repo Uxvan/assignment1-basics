@@ -159,8 +159,8 @@ def run_multihead_self_attention(
         implementation with the given QKV projection weights and input features.
     """
     #raise NotImplementedError
-    from cs336_basics.transformer_lm import MultiHeadselfAttention
-    mha=MultiHeadselfAttention(d_model,num_heads,
+    #from cs336_basics.transformer_lm import MultiHeadselfAttention
+    #mha=MultiHeadselfAttention(d_model,num_heads,
 
 
 def run_multihead_self_attention_with_rope(
