@@ -171,6 +171,7 @@ class MultiHeadselfAttention(nn.Module):
         self.W_O=nn.Linear(d_model,d_model,bias=False)
 
     def forward(self, x, rope:bool=False, theta:float=None, token_positions=None, max_seq_len:int=None):    # x:(...,seq_len,d_model)
+        casual_mask=None
         if max_seq_len:
         # 创建mask
             casual_mask=torch.triu(torch.ones(max_seq_len,max_seq_len),
