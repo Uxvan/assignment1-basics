@@ -108,9 +108,9 @@ class RotaryPositionalEmbedding(nn.Module):
         cos_value=torch.cos(angle).to(device)
         self.register_buffer('sin_value',sin_value)
         self.register_buffer('cos_value',cos_value)
-    def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor: # token_positions:(..., seq_len)
-        choosen_sin=self.sin_value[token_positions]                                    # x:(..., seq_len,d_k)
-        choosen_cos=self.cos_value[token_positions]
+    def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor: # token_positions:(..., seq_len), x:(..., seq_len,d_k)
+        choosen_sin=self.sin_value[token_positions].unsqueeze(-3)               # (..., seq_len, d_k//2) -> (..., 1, seq_len, d_k//2), 方便多头注意力时num_heads维的广播
+        choosen_cos=self.cos_value[token_positions].unsqueeze(-3) 
         x_odd=x[...,0::2]
         x_even=x[...,1::2]
         rotated_odd=x_odd*choosen_cos-x_even*choosen_sin
@@ -171,11 +171,9 @@ class MultiHeadselfAttention(nn.Module):
         self.W_O=nn.Linear(d_model,d_model,bias=False)
 
     def forward(self, x, rope:bool=False, theta:float=None, token_positions=None, max_seq_len:int=None):    # x:(...,seq_len,d_model)
-        casual_mask=None
-        if max_seq_len:
+        seq_len=x.shape[-2]
         # 创建mask
-            casual_mask=torch.triu(torch.ones(max_seq_len,max_seq_len),
-                                    diagonal=-1).bool()
+        casual_mask=torch.triu(torch.ones(seq_len,seq_len)).bool()
 
         Q, K, V=self.W_Q(x), self.W_K(x), self.W_V(x)
         Q = Q.reshape(*Q.shape[:-1], self.num_heads, self.d_k).transpose(-2,-3)
