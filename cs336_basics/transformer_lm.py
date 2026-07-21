@@ -155,8 +155,8 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 class MultiHeadselfAttention(nn.Module):  
     '''
-    MultiHeadSelfAttention(𝑥) = 𝑊_𝑂 MultiHead(𝑊_𝑄𝑥, 𝑊_𝐾𝑥, 𝑊_𝑉𝑥) 
-    𝑊_𝑄 (ℎ𝑑𝑘, 𝑑model), 𝑊_𝐾 (ℎ𝑑𝑘, 𝑑model), 𝑊_𝑉 (ℎ𝑑𝑣, 𝑑model) , 𝑊_𝑂 (𝑑model, ℎ𝑑𝑣)
+    MultiHeadSelfAttention(x) = W_O MultiHead(W_Qx, W_Kx, W_Vx) 
+    W_Q (h*dk, dmodel), W_K (h*dk, dmodel), W_V (h*dv, dmodel) , W_O (dmodel, h*dv)
     d_model: Dimensionality of the Transformer block inputs;
     num_heads: Number of heads
     '''                                    
@@ -165,19 +165,21 @@ class MultiHeadselfAttention(nn.Module):
         self.d_model=d_model
         self.num_heads=num_heads
         self.d_k, self.d_v=d_model//num_heads, d_model//num_heads       # 等同于head_dim
-        self.W_Q=nn.Linear(self.d_k,d_model,bias=False)
-        self.W_K=nn.Linear(self.d_k,d_model,bias=False)
-        self.W_V=nn.Linear(self.d_v,d_model,bias=False)
-        self.W_O=nn.Linear(d_model,self.d_v,bias=False)
+        self.W_Q=nn.Linear(d_model,d_model,bias=False)
+        self.W_K=nn.Linear(d_model,d_model,bias=False)
+        self.W_V=nn.Linear(d_model,d_model,bias=False)
+        self.W_O=nn.Linear(d_model,d_model,bias=False)
 
     def forward(self, x, rope:bool=False, theta:float=None, token_positions=None, max_seq_len:int=None):    # x:(...,seq_len,d_model)
         if max_seq_len:
         # 创建mask
-            y=torch.ones((max_seq_len,max_seq_len))
-            casual_mask=torch.triu(y, diagonal=-1).bool()
+            casual_mask=torch.triu(torch.ones(max_seq_len,max_seq_len),
+                                    diagonal=-1).bool()
 
-        x.reshape(*x.shape[:-1],self.num_heads,-1)      # x -> (...,seq_len,num_heads,head_dim)
         Q, K, V=self.W_Q(x), self.W_K(x), self.W_V(x)
+        Q = Q.reshape(*Q.shape[:-1], self.num_heads, self.d_k)
+        K = K.reshape(*K.shape[:-1], self.num_heads, self.d_k)
+        V = V.reshape(*V.shape[:-1], self.num_heads, self.d_v)      #  -> (...,seq_len,num_heads,head_dim)
 
         if rope:
             self.rope=RotaryPositionalEmbedding(theta, self.d_k, max_seq_len)            
@@ -185,7 +187,7 @@ class MultiHeadselfAttention(nn.Module):
             K=self.rope(K,token_positions)
 
         multi_atten=scaled_dot_product_attention(Q, K, V, casual_mask)
-        multi_atten=multi_atten.reshape(*x.shape[:-2], self.d_model)
+        multi_atten=multi_atten.reshape(*x.shape[:-1], self.d_model)
         out_atten=self.W_O(multi_atten)
 
         return out_atten
