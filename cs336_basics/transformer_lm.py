@@ -120,8 +120,8 @@ class RotaryPositionalEmbedding(nn.Module):
     
 
 def softmax(x: torch.Tensor, i: int): # i-th dimension
-    m=torch.max(x,dim=i, keepdim=True)
-    x_stable=x-m #减去最大值使数值稳定, 防止e^x过大
+    m=torch.max(x,dim=i, keepdim=True).values
+    x_stable=x-m         #减去最大值使数值稳定, 防止e^x过大
     exp_x=torch.exp(x_stable)
     sum=exp_x.sum(dim=i)
     result=exp_x/sum
