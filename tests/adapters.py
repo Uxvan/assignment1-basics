@@ -315,15 +315,15 @@ def run_transformer_block(
     from cs336_basics.transformer_lm import TransformerBlock
     tfBlock=TransformerBlock(d_model,num_heads,d_ff,max_seq_len,theta)
     with torch.no_grad():
-        tfBlock.mha.W_Q.weight.copy_(weights[`attn.q_proj.weight`])
-        tfBlock.mha.W_K.weight.copy_(weights[`attn.k_proj.weight`])
-        tfBlock.mha.W_V.weight.copy_(weights[`attn.v_proj.weight`])
-        tfBlock.mha.W_O.weight.copy_(weights[`attn.output_proj.weight`])
-        tfBlock.norm1.g.copy_(weights[`ln1.weight`])
-        tfBlock.norm2.g.copy_(weights[`ln2.weight`])
-        tfBlock.ffn.w1.weight.copy_(weights[`ffn.w1.weight`])
-        tfBlock.ffn.w2.weight.copy_(weights[`ffn.w2.weight`])
-        tfBlock.ffn.w3.weight.copy_(weights[`ffn.w3.weight`])
+        tfBlock.mha.W_Q.weight.copy_(weights['attn.q_proj.weight'])
+        tfBlock.mha.W_K.weight.copy_(weights['attn.k_proj.weight'])
+        tfBlock.mha.W_V.weight.copy_(weights['attn.v_proj.weight'])
+        tfBlock.mha.W_O.weight.copy_(weights['attn.output_proj.weight'])
+        tfBlock.norm1.g.copy_(weights['ln1.weight'])
+        tfBlock.norm2.g.copy_(weights['ln2.weight'])
+        tfBlock.ffn.w1.weight.copy_(weights['ffn.w1.weight'])
+        tfBlock.ffn.w2.weight.copy_(weights['ffn.w2.weight'])
+        tfBlock.ffn.w3.weight.copy_(weights['ffn.w3.weight'])
     return tfBlock(in_features)
         
 
