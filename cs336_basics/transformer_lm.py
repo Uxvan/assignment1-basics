@@ -14,7 +14,7 @@ class Linear(nn.Module):
         self.init_weight()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        result= x @ self.weight
+        result= self.weight @ x
         return result
     def init_weight(self):
         std=(2/(self.in_dim+self.out_dim))**0.5
