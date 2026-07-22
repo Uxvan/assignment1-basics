@@ -6,11 +6,10 @@ def cross_entropy(logits:torch.tensor, targets:torch.tensor):
     """
     logits=logits-torch.max(logits,dim=-1,keepdim=True).values # 保证数值稳定，防止exp过大
     exp_logits=torch.exp(logits)
-    targets_lgts=exp_logits[torch.arange(logits.shape[0]), targets] # (batch_size,)
 
+    targets_lgts=logits[torch.arange(logits.shape[0]), targets] # (batch_size,)
     sum=exp_logits.sum(dim=-1)  # (batch_size,)
-    softmax=targets_lgts/sum    # (batch_size,)
-    ce= -(softmax.log())
 
-    loss=ce.mean(dim=0)         
+    loss=targets_lgts - sum    # (batch_size,),不直接log是为了防止某个logit对应值过小，导致下溢出现-inf
+    loss=loss.mean(dim=0)         
     return loss
