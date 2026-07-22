@@ -247,18 +247,19 @@ of the RoPE sin and cos buffer.
         self.token_embedding=Embedding(vocab_size, d_model)
         self.block=TransformerBlock(d_model, num_heads, d_ff, context_length, theta)
         self.norm=RMSNorm(d_model)
-        self.linear=Linear(d_model,vocab_size)
+        self.linear=Linear(d_model, vocab_size)
         
-        self.layers=[]
-        for _ in range(num_layers):
-            self.layers.append(self.block)
+        self.layers = nn.ModuleList([
+            TransformerBlock(d_model, num_heads, d_ff, context_length, theta)
+            for _ in range(num_layers)
+        ])
 
     def forward(self,x):
-        
-        transformBlocks=nn.Sequential(*self.layers)
 
         x1=self.token_embedding(x)
-        x2=transformBlocks(x1)
+        x2=x1
+        for layer in self.layers:
+            x2=layer(x2)
         x3=self.norm(x2)
         x4=self.linear(x3)
         out=softmax(x4, -1)
