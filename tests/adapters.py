@@ -408,7 +408,7 @@ def run_transformer_lm(
     """
     #raise NotImplementedError
     from cs336_basics.transformer_lm import TransformerLM
-    tflm=TransformerLM(vocab_size, context_length, num_layers, d_model, num_heads, d_ff, theta)
+    tflm=TransformerLM(vocab_size, context_length, num_layers, d_model, num_heads, d_ff, rope_theta)
     with torch.no_grad():
         tflm.token_embedding.embed_matrix.copy_(weights['token_embeddings.weight'])
         for i in num_layers:
