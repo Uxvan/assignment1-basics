@@ -33,7 +33,7 @@ def run_linear(
     from cs336_basics.transformer_lm import Linear
     linear=Linear(d_in,d_out)
     with torch.no_grad():
-        linear.weight.copy_(weights.T)
+        linear.weight.copy_(weights)
     return linear(in_features)
 
 
