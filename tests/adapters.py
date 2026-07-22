@@ -411,7 +411,7 @@ def run_transformer_lm(
     tflm=TransformerLM(vocab_size, context_length, num_layers, d_model, num_heads, d_ff, rope_theta)
     with torch.no_grad():
         tflm.token_embedding.embed_matrix.copy_(weights['token_embeddings.weight'])
-        for i in num_layers:
+        for i in range(num_layers):
             tflm.layers[i].mha.W_Q.weight.copy_(weights['layers.{i}.attn.q_proj.weight'])
             tflm.layers[i].mha.W_K.weight.copy_(weights['layers.{i}.attn.k_proj.weight'])
             tflm.layers[i].mha.W_V.weight.copy_(weights['layers.{i}.attn.v_proj.weight'])
