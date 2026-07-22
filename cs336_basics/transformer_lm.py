@@ -8,7 +8,7 @@ class Linear(nn.Module):
         super().__init__()
         self.in_dim=in_features
         self.out_dim=out_features
-        self.weight=nn.Parameter(torch.empty((in_features, out_features), device=device, dtype=dtype))
+        self.weight=nn.Parameter(torch.empty((out_features, in_features), device=device, dtype=dtype))
         self.device=device
         self.dtype=dtype
         self.init_weight()
