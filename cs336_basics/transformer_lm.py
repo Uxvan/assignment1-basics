@@ -230,8 +230,7 @@ of the RoPE sin and cos buffer.
     '''
 
     def __init__(self, vocab_size: int, context_length: int, num_layers: int, 
-                 d_model:int, num_heads:int, d_ff:int, theta:float, 
-                 token_ids:torch.tensor, token_positions:torch.tensor):
+                 d_model:int, num_heads:int, d_ff:int, theta:float):
         super().__init__()
         self.num_embeddings=vocab_size
         self.max_seq_len=context_length
@@ -241,24 +240,24 @@ of the RoPE sin and cos buffer.
         self.num_heads=num_heads
         self.d_ff=d_ff
         self.theta=theta
-       
-        self.token_ids=token_ids
-        self.token_positions=token_positions
-        
+               
         self.token_embedding=Embedding(vocab_size, d_model)
-        self.block=TransformerBlock(d_model, num_heads, d_ff, theta, context_length,token_positions)
+        self.block=TransformerBlock(d_model, num_heads, d_ff, context_length, theta)
         self.norm=RMSNorm(d_model)
         self.linear=Linear(d_model,d_model)
+        self.layers=[]
+        self.layers.init_layers()
+
+    def init_layers(self):
+        for _ in range(self.num_layers):
+            self.layers.append(self.block)
+
 
     def forward(self,x):
-
-        layers=[]
-        for _ in range(self.num_layers):
-            layers.append(self.block)
         
-        transformBlocks=nn.Sequential(*layers)
+        transformBlocks=nn.Sequential(*self.layers)
 
-        x1=self.token_embedding(x,self.token_ids)
+        x1=self.token_embedding(x)
         x2=transformBlocks(x1)
         x3=self.norm(x2)
         x4=self.linear(x3)
