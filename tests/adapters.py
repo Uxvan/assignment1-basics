@@ -406,7 +406,26 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    #raise NotImplementedError
+    from cs336_basics.transformer_lm import TransformerLM
+    tflm=TransformerLM(vocab_size, context_length, num_layers, d_model, num_heads, d_ff, theta)
+    with torch.no_grad():
+        tflm.token_embedding.embed_matrix.copy_(weights['token_embeddings.weight'])
+        for i in num_layers:
+            tflm.layers[i].mha.W_Q.weight.copy_(weights['layers.{i}.attn.q_proj.weight'])
+            tflm.layers[i].mha.W_K.weight.copy_(weights['layers.{i}.attn.k_proj.weight'])
+            tflm.layers[i].mha.W_V.weight.copy_(weights['layers.{i}.attn.v_proj.weight'])
+            tflm.layers[i].mha.W_O.weight.copy_(weights['layers.{i}.attn.output_proj.weight'])
+            tflm.layers[i].norm1.g.copy_(weights['layers.{i}.ln1.weight'])
+            tflm.layers[i].norm2.g.copy_(weights['layers.{i}.ln2.weight'])
+            tflm.layers[i].ffn.w1.weight.copy_(weights['layers.{i}.ffn.w1.weight'])
+            tflm.layers[i].ffn.w2.weight.copy_(weights['layers.{i}.ffn.w2.weight'])
+            tflm.layers[i].ffn.w3.weight.copy_(weights['layers.{i}.ffn.w3.weight'])
+        tflm.norm.g.copy_(weights['ln_final.weight'])
+        tflm.linear.weight.copy_(weights['lm_head.weight'])
+    return tflm(in_indices)
+
+
 
 
 def run_rmsnorm(
