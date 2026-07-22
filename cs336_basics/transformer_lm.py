@@ -245,7 +245,6 @@ of the RoPE sin and cos buffer.
         self.theta=theta
                
         self.token_embedding=Embedding(vocab_size, d_model)
-        self.block=TransformerBlock(d_model, num_heads, d_ff, context_length, theta)
         self.norm=RMSNorm(d_model)
         self.linear=Linear(d_model, vocab_size)
         
@@ -262,9 +261,8 @@ of the RoPE sin and cos buffer.
             x2=layer(x2)
         x3=self.norm(x2)
         x4=self.linear(x3)
-        out=softmax(x4, -1)
-
-        return out
+    
+        return x4
 
 
 
