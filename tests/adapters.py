@@ -422,7 +422,7 @@ def run_transformer_lm(
             tflm.layers[i].ffn.w2.weight.copy_(weights[f'layers.{i}.ffn.w2.weight'])
             tflm.layers[i].ffn.w3.weight.copy_(weights[f'layers.{i}.ffn.w3.weight'])
         tflm.norm.g.copy_(weights['ln_final.weight'])
-        tflm.linear.weight.copy_(weights['lm_head.weight'])
+        tflm.linear.weight.copy_(weights['lm_head.weight'].T)
     return tflm(in_indices)
 
 
