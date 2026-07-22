@@ -245,13 +245,10 @@ of the RoPE sin and cos buffer.
         self.block=TransformerBlock(d_model, num_heads, d_ff, context_length, theta)
         self.norm=RMSNorm(d_model)
         self.linear=Linear(d_model,d_model)
+        
         self.layers=[]
-        self.layers.init_layers()
-
-    def init_layers(self):
-        for _ in range(self.num_layers):
+        for _ in range(num_layers):
             self.layers.append(self.block)
-
 
     def forward(self,x):
         
