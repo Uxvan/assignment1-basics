@@ -86,4 +86,12 @@ def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float
         for p in params_withgrad:
             p.grad.mul_(clip_coef)
 
-    
+
+def data_loading(x: np.array, batch_size, context_length, device: str| torch.decive):
+    # 随机采样batch_size个长度为context_length的窗口
+    max_start=len(x) - context_length
+    start_idx=np.random.randint(0, max_start, batch_size)
+    inputs=np.stack([x[i:i+context_length] for i in start_idx])
+    targets=np.stack([x[i+1:i+1+context_length] for i in start_idx])
+
+    return inputs,targets
