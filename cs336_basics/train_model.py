@@ -72,7 +72,7 @@ def cosine_lr_schedule_with_warmup(t, lr_max, lr_min, tw, tc):
     return lr_t
 
 
-def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float=10**-6):
+def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float=1e-6):
     total_norm=0
     params_withgrad=[]
     for p in params:
