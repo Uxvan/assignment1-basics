@@ -579,7 +579,10 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    #raise NotImplementedError
+    from cs336_basics.train_model import cosine_lr_schedule_with_warmup
+    res=cosine_lr_schedule_with_warmup(it, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
+    return res
 
 
 def run_save_checkpoint(
