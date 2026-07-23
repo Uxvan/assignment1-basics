@@ -93,5 +93,7 @@ def data_loading(x: np.array, batch_size, context_length, device: str| torch.dec
     start_idx=np.random.randint(0, max_start, batch_size)
     inputs=np.stack([x[i:i+context_length] for i in start_idx])
     targets=np.stack([x[i+1:i+1+context_length] for i in start_idx])
+    inputs.to(device)
+    targets.to(device)
 
     return inputs,targets
