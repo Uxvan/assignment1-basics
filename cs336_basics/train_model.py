@@ -97,5 +97,5 @@ def data_loading(x: np.ndarray, batch_size, context_length,
     inputs=np.stack([x[i:i+context_length] for i in start_idx])
     targets=np.stack([x[i+1:i+1+context_length] for i in start_idx])
     inputs=torch.from_numpy(inputs).long().to(device)
-    targets=torch.from_numpy(inputs).long().to(device) #.long()把 Tensor 转换成 torch.int64
+    targets=torch.from_numpy(targets).long().to(device) #.long()把 Tensor 转换成 torch.int64
     return inputs,targets
