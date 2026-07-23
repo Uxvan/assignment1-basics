@@ -1,4 +1,6 @@
 import torch
+from collections.abc import Iterable
+
 def cross_entropy(logits:torch.tensor, targets:torch.tensor):
     """
     logits: 模型输出的原始分数, (batch_size, vocab_size)
@@ -17,7 +19,7 @@ def cross_entropy(logits:torch.tensor, targets:torch.tensor):
 
 class AdamW(torch.optim.Optimizer):
     def __init__(self, params :Iterable[torch.nn.Parameter],
-                lr: float, betas :Tuple,
+                lr: float, betas :tuple[float, float],
                 weight_decay: float, eps: float):
         defaults=dict(lr=lr, betas=betas, weight_decay=weight_decay, eps=eps) # 
         super().__init__(params,defaults)
