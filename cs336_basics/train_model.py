@@ -1,6 +1,8 @@
 import torch
 from collections.abc import Iterable
 import math
+import numpy as np
+
 
 def cross_entropy(logits:torch.tensor, targets:torch.tensor):
     """
