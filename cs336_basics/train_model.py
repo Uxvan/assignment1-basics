@@ -74,11 +74,14 @@ def cosine_lr_schedule_with_warmup(t, lr_max, lr_min, tw, tc):
 
 def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float=10**-6):
     total_norm=0
+    params_withgrad=[]
     for p in params:
         if p.grad is None:
             continue
+        params_withgrad.append(p)
         total_norm+=p.grad.norm()
 
     if total_norm > M:
         clip_coef= M/(total_norm + eps)
-        p.grad.mul_(clip_coef)
+        for p in params_withgrad:
+            p.grad.mul_(clip_coef)
