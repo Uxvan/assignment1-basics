@@ -120,7 +120,7 @@ def load_checkpoint(src, model, optimizer):
     model_state=checkpoint['model_state']
     model.load_state_dict(model_state)
 
-    optim_state=checkpoint['optim_state']
-    optimizer.load_state_dict(optim_state)
+    optimizer_state=checkpoint['optimizer_state']
+    optimizer.load_state_dict(optimizer_state)
     return checkpoint['iteration']
 
