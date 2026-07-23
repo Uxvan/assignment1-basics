@@ -1,5 +1,6 @@
 import torch
 from collections.abc import Iterable
+import math
 
 def cross_entropy(logits:torch.tensor, targets:torch.tensor):
     """
@@ -12,7 +13,7 @@ def cross_entropy(logits:torch.tensor, targets:torch.tensor):
     targets_lgts=logits[torch.arange(logits.shape[0]), targets] # (batch_size,)
     sum=exp_logits.sum(dim=-1)  # (batch_size,)
 
-    loss=sum.log() - targets_lgts    # (batch_size,),不直接log是为了防止某个logit对应值过小，导致下溢出现-inf
+    loss=sum.log() - targets_lgts  # (batch_size,),不直接log是为了防止某个logit对应值过小，导致下溢出现-inf
     loss=loss.mean(dim=0)         
     return loss
 
@@ -52,7 +53,7 @@ class AdamW(torch.optim.Optimizer):
                 state["steps"]+=1
                 t=state["steps"]
 
-                lr_t = lr * (1 - beta2**t).sqrt() / (1 - beta1**t)
+                lr_t = lr * math.sqrt(1 - beta2**t) / (1 - beta1**t)
                 p -= lr * weight_decay * p
                 state['m'] = state['m'] * beta1 + (1 - beta1) * grad
                 state['v'] = state['v'] * beta2 + (1 - beta2) * grad * grad
