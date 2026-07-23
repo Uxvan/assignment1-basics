@@ -16,8 +16,10 @@ def cross_entropy(logits:torch.tensor, targets:torch.tensor):
 
 
 class AdamW(torch.optim.Optimizer):
-    def __init__(self, params, alpha, beta_1, beta_2, gamma, eps):
-        defaults=dict(alpha=alpha, beta_1=beta_1, beta_2=beta_2, eps=eps, gamma=gamma)
+    def __init__(self, params :Iterable[torch.nn.Parameter],
+                lr: float, betas :Tuple,
+                weight_decay: float, eps: float):
+        defaults=dict(lr=lr, betas=betas, weight_decay=weight_decay, eps=eps) # 
         super().__init__(params,defaults)
     
     @torch.no_grad()
@@ -28,6 +30,11 @@ class AdamW(torch.optim.Optimizer):
                 loss=closure()
 
         for group in self.param_groups:
+            lr=group['lr'] # alpha
+            beta1, beta2=group['betas']
+            weight_decay=group['weight_decay'] # gamma
+            eps=group['eps']
+
             for p in group["params"]:
                 if p.grad is None:
                     continue
@@ -42,10 +49,11 @@ class AdamW(torch.optim.Optimizer):
 
                 state["steps"]+=1
                 t=state["steps"]
-                group['alpha']=group['alpha'] * (1-group['beta_2']**t).sqrt() / (1-group['beta_1']**t)
-                p -= group['alpha']*group['gamma']*p
-                state['m']=state['m']*group['beta_1']+(1-group['beta_1'])*grad
-                state['v']=state['v']*group['beta_2']+(1-group['beta_2'])*grad*grad
-                p -= group['alpha']*state['m']/((state['v']).sqrt()+group['eps'])
+
+                lr_t = lr * (1 - beta2**t).sqrt() / (1 - beta1**t)
+                p -= lr * weight_decay * p
+                state['m'] = state['m'] * beta1 + (1 - beta1) * grad
+                state['v'] = state['v'] * beta2 + (1 - beta2) * grad * grad
+                p -= lr_t * state['m'] / ((state['v']).sqrt() + eps)
 
         return loss
