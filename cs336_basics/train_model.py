@@ -99,3 +99,28 @@ def data_loading(x: np.ndarray, batch_size, context_length,
     inputs=torch.from_numpy(inputs).long().to(device)
     targets=torch.from_numpy(targets).long().to(device) #.long()把 Tensor 转换成 torch.int64
     return inputs,targets
+
+
+def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer,
+                    iteration: int, out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
+    """dump all the state from the model, optimizer and iteration into the file-like object out"""
+    checkpoint={
+        'model_state': model.state_dict(),
+        'optimizer_state': optimizer.state_dict(),
+        'iteration': iteration
+    }
+    torch.save(checkpoint, out)
+    
+
+def load_checkpoint(src, model, optimizer):
+    """load a checkpoint from src (path or file-like object), 
+    and then recover the model and optimizer states from that checkpoint"""
+    checkpoint=torch.load(src)
+
+    model_state=checkpoint['model_state']
+    model.load_state_dict(model_state)
+
+    optim_state=checkpoint['optim_state']
+    optimizer.load_state_dict(optim_state)
+    return checkpoint['iteration']
+
