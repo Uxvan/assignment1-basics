@@ -90,7 +90,7 @@ def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float
 
 
 def data_loading(x: np.ndarray, batch_size, context_length, 
-                 device: str| torch.decive)-> tuple[torch.Tensor, torch.Tensor]:
+                 device: str| torch.device)-> tuple[torch.Tensor, torch.Tensor]:
     # 随机采样batch_size个长度为context_length的窗口
     max_start=len(x) - context_length
     start_idx=np.random.randint(0, max_start, batch_size)
