@@ -65,7 +65,7 @@ class AdamW(torch.optim.Optimizer):
 def cosine_lr_schedule_with_warmup(t, lr_max, lr_min, tw, tc):
     if t < tw:
         lr_t= t/tw * lr_max
-    elif tw< t <tc:
+    elif tw<= t <=tc:
         lr_t= lr_min + 1/2 * (1 + math.cos((t-tw)/(tc-tw) * torch.pi)) * (lr_max - lr_min)
     else:
         lr_t=lr_min
