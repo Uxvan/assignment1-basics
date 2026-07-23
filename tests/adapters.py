@@ -491,7 +491,7 @@ def run_get_batch(
         language modeling labels.
     """
     #raise NotImplementedError
-    from cs336_basics.transformer_lm import data_loading
+    from cs336_basics.train_model import data_loading
     res=data_loading(dataset,batch_size,context_length,device)
     return res
 
