@@ -1,12 +1,14 @@
 import torch
 import argparse
 
-from train_results import vocab_tinystories, merges_tinystories
 from cs336_basics.tokenizer import Tokenizer
 from cs336_basics.transformer_lm import TransformerLM, softmax
 
-vocab, merges=vocab_tinystories, merges_tinystories
-tokenizer=Tokenizer(vocab, merges, special_tokens=['<|endoftext|>'])
+tokenizer = Tokenizer.from_files(
+    vocab_filepath='train_results/vocab_merges/vocab_tinystories.pkl',
+    merges_filepath='train_results/vocab_merges/merges_tinystories.pkl',
+    special_tokens=['<|endoftext|>'],
+)
 
 def get_args():
     parser = argparse.ArgumentParser()
