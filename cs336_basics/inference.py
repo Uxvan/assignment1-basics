@@ -12,14 +12,6 @@ def get_args():
     parser = argparse.ArgumentParser()
     #加载checkpoint权重
     parser.add_argument('--checkpoint_path', type=str, required=True)
-    #模型超参数
-    parser.add_argument('--vocab_size', type=int, required=True)
-    parser.add_argument('--context_length', type=int, default=256)
-    parser.add_argument('--d_model', type=int, default=512)
-    parser.add_argument('--num_layers', type=int, default=4)
-    parser.add_argument('--num_heads', type=int, default=16)
-    parser.add_argument('--d_ff', type=int, default=1344)
-    parser.add_argument('--theta', type=float, default=10000.0, help='float for RoPE')
     #推理参数
     parser.add_argument('--max_new_tokens', type=int, default=100)
     parser.add_argument('--temperature', type=float, default=1.0)
@@ -30,20 +22,22 @@ def get_args():
 
 
 def load_model_for_inference(args):
+    checkpoint = torch.load(args.checkpoint_path, map_location=args.device)
+    config_for_infer=checkpoint['config_for_infer']
+
     model = TransformerLM(
-        vocab_size=args.vocab_size,
-        context_length=args.context_length,
-        d_model=args.d_model,
-        num_layers=args.num_layers,
-        num_heads=args.num_heads,
-        d_ff=args.d_ff,
-        theta=args.theta,
+        vocab_size=config_for_infer['vocab_size'],
+        context_length=config_for_infer['context_length'],
+        d_model=config_for_infer['d_model'],
+        num_layers=config_for_infer['num_layers'],
+        num_heads=config_for_infer['num_heads'],
+        d_ff=config_for_infer['d_ff'],
+        theta=config_for_infer['theta'],
     ).to(args.device)
 
-    checkpoint = torch.load(args.checkpoint_path, map_location=args.device)
     model.load_state_dict(checkpoint['model_state'])
     model.eval()  # 关键:关闭 dropout 等训练专用行为
-    return model
+    return model, config_for_infer
 
 
 def top_p_sampling(x:torch.Tensor, p: float=0.9) -> torch.Tensor:
@@ -86,17 +80,17 @@ def inference(model, input_ids, max_new_tokens: int, context_length: int, temper
 
 def main():
     args=get_args()
-    model=load_model_for_inference(args)
+    model, config_for_infer=load_model_for_inference(args)
 
     # encode 返回list[int]，要转换为tensor
     prompt_ids=tokenizer.encode(args.prompt)
-    input_ids=torch.tensor([prompt_ids], dtype=torch.long, device=args.device) #(batch, input_seq_len），这里batch=1
+    input_ids=torch.tensor([prompt_ids], dtype=torch.long) #(batch, input_seq_len），这里batch=1
 
     eos_token_id=tokenizer.encode('<|endoftext|>')[0]
     output_ids=inference(
         model, input_ids,
         max_new_tokens=args.max_new_tokens,
-        context_length=args.context_length,
+        context_length=config_for_infer['context_length'],
         temperature=args.temperature,
         top_p=args.top_p,
         eos_token_id=eos_token_id,
