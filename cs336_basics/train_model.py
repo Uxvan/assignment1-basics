@@ -101,13 +101,14 @@ def data_loading(x: np.ndarray, batch_size, context_length,
     return inputs,targets
 
 
-def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer,
+def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer, hp_for_infer: dict,
                     iteration: int, out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
     """dump all the state from the model, optimizer and iteration into the file-like object out"""
     checkpoint={
         'model_state': model.state_dict(),
         'optimizer_state': optimizer.state_dict(),
-        'iteration': iteration
+        'iteration': iteration,
+        'hp_for_infer': hp_for_infer # 存储infere所需参数
     }
     torch.save(checkpoint, out)
     
