@@ -68,6 +68,17 @@ def main():
         eps=args.eps
     )
 
+    # inference所需参数
+    config_for_infer={
+        'vocab_size': args.vocab_size,
+        'context_length': args.context_length,
+        'num_layers': args.num_layers,
+        'd_model': args.d_model,
+        'd_ff': args.d_ff,
+        'num_heads': args.num_heads,
+        'theta': args.theta
+    }
+
     start_iter = 0
     if args.resume_from is not None:
         start_iter = load_checkpoint(args.resume_from, model, optimizer)
@@ -99,7 +110,7 @@ def main():
             print(f"iter {it}: val loss {val_loss:.4f}")
 
         if it % args.checkpoint_interval == 0 or it == args.total_iters - 1:
-            save_checkpoint(model, optimizer, it, args.checkpoint_path)
+            save_checkpoint(model, optimizer, config_for_infer, it, args.checkpoint_path)
 
 
 @torch.no_grad()
