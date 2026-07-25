@@ -1,6 +1,8 @@
 import argparse
 import torch
 import numpy as np
+import wandb
+import time
 
 from cs336_basics.transformer_lm import TransformerLM
 from cs336_basics.train_model import cross_entropy, AdamW, cosine_lr_schedule_with_warmup,\
@@ -38,7 +40,10 @@ def get_args():
     parser.add_argument('--checkpoint_path', type=str, required=True)
     parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu')
     parser.add_argument('--resume_from', type=str, default=None)
-
+    #训练记录
+    parser.add_argument('--wandb_project', type=str, default='cs336_lm')
+    parser.add_argument('--run_name', type=str, default=None)
+    parser.add_argument('--use_wandb', action='store_true')
     return parser.parse_args()
 
 
@@ -50,6 +55,14 @@ def main():
     train_data = np.memmap(args.train_data, dtype=np.uint16, mode='r')
     val_data = np.memmap(args.val_data, dtype=np.uint16, mode='r')
 
+    if args.use_wandb:
+        wandb.init(
+            project=args.wandb_project,
+            name=args.run_name,
+            config=vars(args) # 把超参数记录下来，方便之后对比不同run
+        )
+
+    # 模型，优化器初始化
     model = TransformerLM(
         vocab_size=args.vocab_size,
         context_length=args.context_length,
@@ -68,7 +81,7 @@ def main():
         eps=args.eps
     )
 
-    # inference所需参数
+    # inference所需参数，即模型设置参数
     config_for_infer={
         'vocab_size': args.vocab_size,
         'context_length': args.context_length,
@@ -82,6 +95,8 @@ def main():
     start_iter = 0
     if args.resume_from is not None:
         start_iter = load_checkpoint(args.resume_from, model, optimizer)
+
+    start_time = time.time()  # 记录训练开始的时间戳
 
     for it in range(start_iter, args.total_iters):
         # 学习率调度(cosine schedule with warmup)
@@ -102,15 +117,30 @@ def main():
         optimizer.step()
 
         if it % args.log_interval == 0:
-            print(f"iter {it}: train loss {loss.item():.4f}, lr {lr:.6f}")
-            # 如果用 wandb: wandb.log({'train_loss': loss.item(), 'lr': lr}, step=it)
+            elapsed = time.time() - start_time  # wall-clock time(秒)
+            print(f"iter {it}: train loss {loss.item():.4f}, lr {lr:.6f}, elapsed {elapsed:.1f}s")
+            if args.use_wandb: 
+                wandb.log({'train_loss': loss.item(), 
+                           'lr': lr,
+                           'train/wall_clock_time': elapsed,
+                }, step=it)  # step=it 这样x轴默认就是gradient step
 
         if it % args.eval_interval == 0:
             val_loss = estimate_val_loss(model, val_data, args)
+            elapsed = time.time() - start_time
             print(f"iter {it}: val loss {val_loss:.4f}")
+            if args.use_wandb:
+                wandb.log({
+                    'val_loss': val_loss,
+                    'val/wall_clock_time': elapsed,
+                }, step=it)
 
         if it % args.checkpoint_interval == 0 or it == args.total_iters - 1:
             save_checkpoint(model, optimizer, config_for_infer, it, args.checkpoint_path)
+
+    if args.use_wandb:
+        wandb.finish()
+
 
 
 @torch.no_grad()
