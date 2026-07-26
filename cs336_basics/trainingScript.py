@@ -110,8 +110,12 @@ def main():
         inputs, targets = data_loading(train_data, args.batch_size,
                                         args.context_length, args.device)
 
-        logits = model(inputs)
-        loss = cross_entropy(logits, targets)
+        logits = model(inputs)  # (batch_size, seq_len, vocab_size)
+        # 交叉熵本质上是"对每一个token位置独立算一次loss，然后求平均
+        loss = cross_entropy(
+            logits.reshape(-1, logits.shape[-1]),   # -> (batch_size*seq_len, vocab_size)
+            targets.reshape(-1)                     # -> (batch_size*seq_len,)
+        )
 
         optimizer.zero_grad()
         loss.backward()
@@ -152,7 +156,7 @@ def estimate_val_loss(model, val_data, args):
         inputs, targets = data_loading(val_data, args.batch_size,
                                         args.context_length, args.device)
         logits = model(inputs)
-        losses.append(cross_entropy(logits, targets).item())
+        losses.append(cross_entropy(logits.reshape(-1, logits.shape[-1]), targets.reshape(-1)).item())
     model.train()
     return sum(losses) / len(losses)
 
