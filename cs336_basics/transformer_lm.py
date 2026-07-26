@@ -3,6 +3,7 @@ import torch.nn as nn
 from einops import einsum
 from collections import OrderedDict
 
+
 class Linear(nn.Module):
     def __init__(self, in_features, out_features, device=None, dtype=None):
         super().__init__()
@@ -22,7 +23,8 @@ class Linear(nn.Module):
     def init_weight(self):
         std=(2/(self.in_dim+self.out_dim))**0.5
         nn.init.trunc_normal_(self.weight,mean=0,std=std,a=-3*std,b=3*std)
-    
+        
+
 
 class Embedding(nn.Module):
     '''
@@ -47,7 +49,6 @@ class Embedding(nn.Module):
     def forward(self, token_ids: torch.Tensor) -> torch.Tensor:
         embed_vectors=self.embed_matrix[token_ids]      # (batch_size, seq_len, d_model)
         return embed_vectors 
-        
     
 
 class RMSNorm(nn.Module):
@@ -79,7 +80,7 @@ class PositionwiseFeedforward(nn.Module):
     '''
      d_ff: Dimensionality of the position-wise feed-forward inner layer.
     '''
-    def __init__(self, d_model, d_ff:int):    
+    def __init__(self, d_model, d_ff:int):     
         super().__init__()
         self.d_ff=d_ff
         self.d_model=d_model
@@ -112,6 +113,7 @@ class RotaryPositionalEmbedding(nn.Module):
         cos_value=torch.cos(angle).to(device)
         self.register_buffer('sin_value',sin_value)
         self.register_buffer('cos_value',cos_value)
+
     def forward(self, x: torch.Tensor, token_positions: torch.Tensor =None) -> torch.Tensor: # token_positions:(..., seq_len), x:(..., seq_len,d_k)
         if token_positions==None:
             token_positions=torch.arange(x.shape[-2])
@@ -127,7 +129,7 @@ class RotaryPositionalEmbedding(nn.Module):
 
 def softmax(x: torch.Tensor, i: int): # i-th dimension
     m=torch.max(x,dim=i, keepdim=True).values
-    x_stable=x-m         #减去最大值使数值稳定, 防止e^x过大
+    x_stable=x-m #减去最大值使数值稳定, 防止e^x过大
     exp_x=torch.exp(x_stable)
     sum=exp_x.sum(dim=i,keepdim=True)
     result=exp_x/sum
@@ -140,7 +142,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     V:(batch_size, ..., seq_len, d_v); 
     mask:(seq_len, seq_len)
 
-    Attention(𝑄, 𝐾, 𝑉 ) = softmax(𝑄𝐾^𝑇/√𝑑𝑘 )𝑉
+    Attention(Q, K, V) = softmax(QK^T/√𝑑𝑘 )V
     '''
     d_k=Q.shape[-1]                                    
     dot_product=einsum(
@@ -166,7 +168,7 @@ class MultiHeadselfAttention(nn.Module):
     d_model: Dimensionality of the Transformer block inputs;
     num_heads: Number of heads
     '''                                    
-    def __init__(self, d_model:int, num_heads:int): 
+    def __init__(self, d_model:int, num_heads:int, theta:float=None, max_seq_len:int=None, device=None): 
         super().__init__() 
         self.d_model=d_model
         self.num_heads=num_heads
@@ -175,19 +177,20 @@ class MultiHeadselfAttention(nn.Module):
         self.W_K=nn.Linear(d_model,d_model,bias=False)
         self.W_V=nn.Linear(d_model,d_model,bias=False)
         self.W_O=nn.Linear(d_model,d_model,bias=False)
+        self.rope = RotaryPositionalEmbedding(theta, self.d_k, max_seq_len, device=device) if theta is not None else None
 
-    def forward(self, x, rope:bool=False, theta:float=None, token_positions=None, max_seq_len:int=None):    # x:(...,seq_len,d_model)
+
+    def forward(self, x, token_positions=None):    # x:(...,seq_len,d_model)
         seq_len=x.shape[-2]
         # 创建mask
-        casual_mask=torch.tril(torch.ones(seq_len,seq_len)).bool()
+        casual_mask=torch.tril(torch.ones(seq_len, seq_len, device=x.device)).bool()
 
         Q, K, V=self.W_Q(x), self.W_K(x), self.W_V(x)
         Q = Q.reshape(*Q.shape[:-1], self.num_heads, self.d_k).transpose(-2,-3)
         K = K.reshape(*K.shape[:-1], self.num_heads, self.d_k).transpose(-2,-3)
         V = V.reshape(*V.shape[:-1], self.num_heads, self.d_v).transpose(-2,-3)      #  -> (...,seq_len,num_heads,head_dim) -> (...,num_heads,seq_len,head_dim)
 
-        if rope:
-            self.rope=RotaryPositionalEmbedding(theta, self.d_k, max_seq_len)            
+        if self.rope is not None:
             Q=self.rope(Q,token_positions)
             K=self.rope(K,token_positions)
 
@@ -210,12 +213,12 @@ class TransformerBlock(nn.Module):
         self.token_positions=token_positions
         self.norm1=RMSNorm(d_model)
         self.norm2=RMSNorm(d_model)
-        self.mha=MultiHeadselfAttention(d_model, num_heads)
+        self.mha=MultiHeadselfAttention(d_model, num_heads, theta, max_seq_len)
         self.ffn=PositionwiseFeedforward(d_model,d_ff)
 
     def forward(self, x):
         y=self.norm1(x)
-        out1= x+ self.mha(y, True, self.theta, self.token_positions, self.max_seq_len)
+        out1= x+ self.mha(y, self.token_positions)
        
         z=self.norm2(out1)
         out2= out1 +self.ffn(z)   # out2: (..., seq_len, d_model)
@@ -228,7 +231,7 @@ class TransformerLM(nn.Module):
     vocab_size: The size of the vocabulary, necessary for determining the dimensionality of the
 token embedding matrix.
     context_length: The maximum context length, necessary for determining the dimensionality
-of the RoPE sin and cos buffer.
+of the RoPE sin and cos buffer. i.e. max_seq_len
     num_layers: The number of Transformer blocks to use.
     '''
 
@@ -261,7 +264,7 @@ of the RoPE sin and cos buffer.
             x2=layer(x2)
         x3=self.norm(x2)
         x4=self.linear(x3)
-    
+
         return x4
 
 
