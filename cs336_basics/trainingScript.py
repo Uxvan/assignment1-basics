@@ -119,7 +119,7 @@ def main():
 
         optimizer.zero_grad()
         loss.backward()
-        gradient_clipping(model.parameters(), args.grad_clip)
+        gradient_clipping(model.parameters(), args.grad_clip_norm)
         optimizer.step()
 
         if it % args.log_interval == 0:
