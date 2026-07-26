@@ -103,7 +103,7 @@ def main():
     for it in range(start_iter, args.total_iters):
         # 学习率调度(cosine schedule with warmup)
         lr = cosine_lr_schedule_with_warmup(it, args.lr_max, args.lr_min,
-                                     args.warmup_iters, args.total_iters)
+                                     args.warm_iters, args.total_iters)
         for group in optimizer.param_groups:
             group['lr'] = lr
 
