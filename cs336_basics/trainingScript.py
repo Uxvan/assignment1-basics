@@ -8,12 +8,14 @@ from cs336_basics.transformer_lm import TransformerLM
 from cs336_basics.train_model import cross_entropy, AdamW, cosine_lr_schedule_with_warmup,\
                                     gradient_clipping, data_loading, save_checkpoint, load_checkpoint
 
+
 def get_args():
+
     #创建解析器对象
     parser=argparse.ArgumentParser(description='Train a Transformer LM')
     #模型超参数
-    parser.add_argument('--vocab_size',type=int, required=True)
-    parser.add_argument('--context_length', type=int, required=256)
+    parser.add_argument('--vocab_size',type=int, default=10000)
+    parser.add_argument('--context_length', type=int, default=256)
     parser.add_argument('--num_layers', type=int, default=4)
     parser.add_argument('--d_model', type=int, default=512)
     parser.add_argument('--d_ff', type=int, default=1344)
@@ -140,7 +142,6 @@ def main():
 
     if args.use_wandb:
         wandb.finish()
-
 
 
 @torch.no_grad()
