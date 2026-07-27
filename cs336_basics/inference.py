@@ -25,21 +25,21 @@ def get_args():
 
 def load_model_for_inference(args):
     checkpoint = torch.load(args.checkpoint_path, map_location=args.device)
-    config_for_infer=checkpoint['config_for_infer']
+    hp_for_infer=checkpoint['hp_for_infer']
 
     model = TransformerLM(
-        vocab_size=config_for_infer['vocab_size'],
-        context_length=config_for_infer['context_length'],
-        d_model=config_for_infer['d_model'],
-        num_layers=config_for_infer['num_layers'],
-        num_heads=config_for_infer['num_heads'],
-        d_ff=config_for_infer['d_ff'],
-        theta=config_for_infer['theta'],
+        vocab_size=hp_for_infer['vocab_size'],
+        context_length=hp_for_infer['context_length'],
+        d_model=hp_for_infer['d_model'],
+        num_layers=hp_for_infer['num_layers'],
+        num_heads=hp_for_infer['num_heads'],
+        d_ff=hp_for_infer['d_ff'],
+        theta=hp_for_infer['theta'],
     ).to(args.device)
 
     model.load_state_dict(checkpoint['model_state'])
     model.eval()  # 关键:关闭 dropout 等训练专用行为
-    return model, config_for_infer
+    return model, hp_for_infer
 
 
 def top_p_sampling(x:torch.Tensor, p: float=0.9) -> torch.Tensor:
@@ -82,7 +82,7 @@ def inference(model, input_ids, max_new_tokens: int, context_length: int, temper
 
 def main():
     args=get_args()
-    model, config_for_infer=load_model_for_inference(args)
+    model, hp_for_infer=load_model_for_inference(args)
 
     # encode 返回list[int]，要转换为tensor
     prompt_ids=tokenizer.encode(args.prompt)
@@ -92,7 +92,7 @@ def main():
     output_ids=inference(
         model, input_ids,
         max_new_tokens=args.max_new_tokens,
-        context_length=config_for_infer['context_length'],
+        context_length=hp_for_infer['context_length'],
         temperature=args.temperature,
         top_p=args.top_p,
         eos_token_id=eos_token_id,
