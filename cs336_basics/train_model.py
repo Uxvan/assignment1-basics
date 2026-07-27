@@ -20,6 +20,7 @@ def cross_entropy(logits:torch.tensor, targets:torch.tensor):
     return loss
 
 
+
 class AdamW(torch.optim.Optimizer):
     def __init__(self, params :Iterable[torch.nn.Parameter],
                 lr: float, betas :tuple[float, float],
@@ -64,6 +65,7 @@ class AdamW(torch.optim.Optimizer):
         return loss
 
 
+# 学习率调度策略
 def cosine_lr_schedule_with_warmup(t, lr_max, lr_min, tw, tc):
     if t < tw:
         lr_t= t/tw * lr_max
@@ -72,6 +74,7 @@ def cosine_lr_schedule_with_warmup(t, lr_max, lr_min, tw, tc):
     else:
         lr_t=lr_min
     return lr_t
+
 
 
 def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float=1e-6):
@@ -89,6 +92,7 @@ def gradient_clipping(params: Iterable[torch.nn.Parameter], M: float, eps: float
             p.grad.mul_(clip_coef)
 
 
+
 def data_loading(x: np.ndarray, batch_size, context_length, 
                  device: str| torch.device)-> tuple[torch.Tensor, torch.Tensor]:
     # 随机采样batch_size个长度为context_length的窗口
@@ -98,7 +102,9 @@ def data_loading(x: np.ndarray, batch_size, context_length,
     targets=np.stack([x[i+1:i+1+context_length] for i in start_idx])
     inputs=torch.from_numpy(inputs).long().to(device)
     targets=torch.from_numpy(targets).long().to(device) #.long()把 Tensor 转换成 torch.int64
+
     return inputs,targets
+
 
 
 def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer, hp_for_infer: dict,
@@ -124,4 +130,3 @@ def load_checkpoint(src, model, optimizer):
     optimizer_state=checkpoint['optimizer_state']
     optimizer.load_state_dict(optimizer_state)
     return checkpoint['iteration']
-
