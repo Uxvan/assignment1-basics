@@ -31,11 +31,11 @@ def get_args():
     #训练相关
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--warm_iters', type=int, default=200)
-    parser.add_argument('--total_iters', type=int, default=10000)
-    parser.add_argument('--log_interval', type=int, default=10) # 每隔多少步打印一次训练日志（如 loss、准确率）
+    parser.add_argument('--total_iters', type=int, default=5000)
+    parser.add_argument('--log_interval', type=int, default=100) # 每隔多少步打印一次训练日志（如 loss、准确率）
     parser.add_argument('--eval_interval', type=int, default=200) # 每隔多少步在验证集上做一次评估
     parser.add_argument('--eval_iters', type=int, default=50) # 做验证时，用多少个 batch 的验证集数据来估算 loss/准确率
-    parser.add_argument('--checkpoint_interval', type=int, default=1000) # 每隔多少步保存一次模型权重
+    parser.add_argument('--checkpoint_interval', type=int, default=500) # 每隔多少步保存一次模型权重
     #路径
     parser.add_argument('--train_data', type=str, required=True)
     parser.add_argument('--val_data', type=str, required=True)
