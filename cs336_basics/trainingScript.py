@@ -54,11 +54,11 @@ def get_args():
 
 def main():
 
+    args = get_args()
+
     # 对比实验时固定种子
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-
-    args = get_args()
 
     # 用 memmap 而不是直接 np.load,避免整个数据集读进内存
     train_data = np.memmap(args.train_data, dtype=np.uint16, mode='r')
