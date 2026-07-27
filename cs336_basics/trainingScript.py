@@ -84,7 +84,7 @@ def main():
     )
 
     # inference所需参数，即模型设置参数
-    config_for_infer={
+    hp_for_infer={
         'vocab_size': args.vocab_size,
         'context_length': args.context_length,
         'num_layers': args.num_layers,
@@ -142,7 +142,7 @@ def main():
                 }, step=it)
 
         if it % args.checkpoint_interval == 0 or it == args.total_iters - 1:
-            save_checkpoint(model, optimizer, config_for_infer, it, args.checkpoint_path)
+            save_checkpoint(model, optimizer, hp_for_infer, it, args.checkpoint_path)
 
     if args.use_wandb:
         wandb.finish()
