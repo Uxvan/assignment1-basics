@@ -46,11 +46,18 @@ def get_args():
     parser.add_argument('--wandb_project', type=str, default='cs336_lm')
     parser.add_argument('--run_name', type=str, default=None)
     parser.add_argument('--use_wandb', action='store_true')
+    # 对比实验
+    parser.add_argument('--seed', type=int, default=42)
     return parser.parse_args()
 
 
 
 def main():
+
+    # 对比实验时固定种子
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
     args = get_args()
 
     # 用 memmap 而不是直接 np.load,避免整个数据集读进内存
