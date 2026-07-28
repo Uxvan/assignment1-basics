@@ -7,6 +7,10 @@ import time
 from cs336_basics.transformer_lm import TransformerLM
 from cs336_basics.train_model import cross_entropy, AdamW, cosine_lr_schedule_with_warmup,\
                                     gradient_clipping, data_loading, save_checkpoint, load_checkpoint
+def theta_type(value):
+    if value.lower() == 'none':
+        return None
+    return float(value)
 
 
 def get_args():
@@ -20,7 +24,7 @@ def get_args():
     parser.add_argument('--d_model', type=int, default=512)
     parser.add_argument('--d_ff', type=int, default=1344)
     parser.add_argument('--num_heads', type=int, default=16)
-    parser.add_argument('--theta', type=float, default=10000.0, help='float for RoPE')
+    parser.add_argument('--theta', type=theta_type, default=10000.0, help='float for RoPE')
     #优化器超参数
     parser.add_argument('--betas', type=float, nargs=2, default=(0.9, 0.999), help='betas for AdamW')
     parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay for AdamW')
